@@ -24,7 +24,14 @@ export async function extractWorkItems(
     throw new Error("Empty response from extractor");
   }
 
-  const parsed = JSON.parse(content);
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch (e) {
+    console.error("Failed to parse extractor response:", content);
+    throw new Error(`Invalid JSON from extractor: ${e instanceof Error ? e.message : "parse error"}`);
+  }
+
   // Handle both { items: [...] } and [...] formats
   const items = Array.isArray(parsed) ? parsed : parsed.items || parsed.works || [];
   return items as WorkItem[];

@@ -59,5 +59,10 @@ export async function normalizeInput(params: {
     throw new Error("Empty response from normalizer");
   }
 
-  return JSON.parse(content) as NormalizedInput;
+  try {
+    return JSON.parse(content) as NormalizedInput;
+  } catch (e) {
+    console.error("Failed to parse normalizer response:", content);
+    throw new Error(`Invalid JSON from normalizer: ${e instanceof Error ? e.message : "parse error"}`);
+  }
 }
