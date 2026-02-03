@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generateEstimatePdf, generateEstimateCsv } from "@/lib/utils/export";
+import { generateEstimateCsv } from "@/lib/utils/export-csv";
 import { Estimate } from "@/lib/supabase/types";
 
 // GET /api/estimates/:id/export?format=pdf|csv
@@ -53,7 +53,8 @@ export async function GET(
     });
   }
 
-  // PDF export (default)
+  // PDF export (default) - dynamic import to avoid DOMMatrix error
+  const { generateEstimatePdf } = await import("@/lib/utils/export");
   const pdfBuffer = await generateEstimatePdf(estimate.result, id);
 
   return new NextResponse(new Uint8Array(pdfBuffer), {
