@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse");
+const pdfParse = require("pdf-parse-fork");
 
 export async function parsePdfBuffer(buffer: Buffer): Promise<string> {
   try {
