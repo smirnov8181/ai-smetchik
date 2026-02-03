@@ -47,7 +47,14 @@ export function VerificationForm() {
         body: formData,
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        console.error("Failed to parse response:", text);
+        throw new Error("Ошибка сервера. Попробуйте позже.");
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to create verification");
