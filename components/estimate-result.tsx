@@ -40,7 +40,10 @@ export function EstimateResult({ result, estimateId }: EstimateResultProps) {
         method: "GET",
       });
 
-      if (!response.ok) throw new Error("Export failed");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Export failed");
+      }
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -51,6 +54,7 @@ export function EstimateResult({ result, estimateId }: EstimateResultProps) {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export error:", error);
+      alert(error instanceof Error ? error.message : "Ошибка экспорта");
     } finally {
       setIsExporting(false);
     }

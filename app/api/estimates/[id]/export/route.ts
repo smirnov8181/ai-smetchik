@@ -39,7 +39,7 @@ export async function GET(
 
   if (estimate.status !== "ready" || !estimate.result) {
     return NextResponse.json(
-      { error: "Estimate is not ready for export" },
+      { error: `Estimate is not ready for export. Status: ${estimate.status}, hasResult: ${!!estimate.result}` },
       { status: 400 }
     );
   }
