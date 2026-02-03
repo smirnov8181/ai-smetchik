@@ -61,8 +61,8 @@ export async function calculatePrices(
 
     const pricePerUnit = catalogItem?.price_avg ?? estimateDefaultPrice(item);
     const laborCost = Math.round(pricePerUnit * item.quantity);
-    // Rough material estimate: ~40% of labor for most work types
-    const materialCost = Math.round(laborCost * getMaterialRatio(item.category));
+    // Material cost based on work type (0 for labor-only, higher for material-heavy)
+    const materialCost = Math.round(laborCost * getMaterialRatio(item.category, item.work));
     const total = laborCost + materialCost;
 
     return {
@@ -92,19 +92,59 @@ function estimateDefaultPrice(item: WorkItem): number {
   return defaults[item.category] ?? 500;
 }
 
-function getMaterialRatio(category: string): number {
-  // Material cost as ratio of labor cost
+function getMaterialRatio(category: string, workName: string): number {
+  const workLower = workName.toLowerCase();
+
+  // Работы БЕЗ материалов (только труд)
+  const noMaterialWorks = [
+    "вынос", "мусор", "демонтаж", "снятие", "удаление", "разборка",
+    "уборка", "очистка", "подметание", "мытьё", "мытье",
+    "защита", "укрытие", "заклейка",
+    "перенос", "переноска", "погрузка", "разгрузка",
+    "штробление", "долбление",
+  ];
+
+  if (noMaterialWorks.some(w => workLower.includes(w))) {
+    return 0;
+  }
+
+  // Работы с МИНИМАЛЬНЫМИ материалами (расходники)
+  const minimalMaterialWorks = [
+    "грунтовка", "грунтование", // грунт дешёвый
+    "шпаклевка черновая", "штукатурка",
+  ];
+
+  if (minimalMaterialWorks.some(w => workLower.includes(w))) {
+    return 0.15;
+  }
+
+  // Работы с ВЫСОКИМИ затратами на материалы
+  const highMaterialWorks = [
+    "плитка", "кафель", // плитка дорогая
+    "ламинат", "паркет", // покрытие дорогое
+    "обои", // обои дорогие
+    "натяжной потолок", // полотно дорогое
+    "сантехприбор", "унитаз", "раковина", "ванна", "смеситель", // приборы дорогие
+  ];
+
+  if (highMaterialWorks.some(w => workLower.includes(w))) {
+    return 0.7;
+  }
+
+  // По категориям (fallback)
   const ratios: Record<string, number> = {
-    "Демонтаж": 0.05,
-    "Стены": 0.5,
-    "Потолок": 0.4,
-    "Пол": 0.6,
-    "Электрика": 0.7,
-    "Сантехника": 0.3,
+    "Демонтаж": 0,
+    "Подготовительные работы": 0.1,
+    "Стены": 0.4,
+    "Потолок": 0.35,
+    "Пол": 0.5,
+    "Электрика": 0.6,
+    "Сантехника": 0.5,
     "Двери": 0.1,
     "Окна": 0.2,
-    "Черновые работы": 0.5,
-    "Уборка": 0.1,
+    "Черновые работы": 0.3,
+    "Уборка": 0,
   };
-  return ratios[category] ?? 0.4;
+
+  return ratios[category] ?? 0.3;
 }
