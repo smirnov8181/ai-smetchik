@@ -54,7 +54,7 @@ export async function GET(
   }
 
   // PDF export (default)
-  const pdfBuffer = generateEstimatePdf(estimate.result, id);
+  const pdfBuffer = await generateEstimatePdf(estimate.result, id);
 
   return new NextResponse(new Uint8Array(pdfBuffer), {
     status: 200,
