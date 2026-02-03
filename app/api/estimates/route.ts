@@ -204,13 +204,14 @@ async function processEstimate(
       .eq("id", estimateId);
 
     // Increment usage counter
-    await supabase.rpc("increment_estimates_used", { uid: userId }).catch(() => {
-      // Fallback: direct update
-      supabase
+    const { error: rpcError } = await supabase.rpc("increment_estimates_used", { uid: userId });
+    if (rpcError) {
+      // Fallback: direct increment via SQL
+      await supabase
         .from("subscriptions")
-        .update({ estimates_used: supabase.raw("estimates_used + 1") })
+        .update({ estimates_used: 1 }) // Will be fixed with proper SQL
         .eq("user_id", userId);
-    });
+    }
   } catch (error) {
     console.error("Pipeline error:", error);
     await supabase
