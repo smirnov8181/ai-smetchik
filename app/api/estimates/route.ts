@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+
+// Force Node.js runtime (not Edge) for PDF parsing
+export const runtime = "nodejs";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { normalizeInput } from "@/lib/ai/normalizer";

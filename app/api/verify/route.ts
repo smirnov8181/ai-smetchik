@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+
+// Force Node.js runtime for PDF/XLSX parsing
+export const runtime = "nodejs";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
   parseContractorEstimate,

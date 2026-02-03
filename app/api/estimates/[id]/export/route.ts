@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+
+// Force Node.js runtime
+export const runtime = "nodejs";
 import { createClient } from "@/lib/supabase/server";
 import { generateEstimateCsv } from "@/lib/utils/export-csv";
 import { Estimate } from "@/lib/supabase/types";
