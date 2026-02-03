@@ -47,12 +47,12 @@ export function EstimateForm() {
         body: formData,
       });
 
-      const text = await response.text();
+      const responseText = await response.text();
       let data;
       try {
-        data = text ? JSON.parse(text) : {};
+        data = responseText ? JSON.parse(responseText) : {};
       } catch {
-        console.error("Failed to parse response:", text);
+        console.error("Failed to parse response:", responseText);
         throw new Error("Ошибка сервера. Попробуйте позже.");
       }
 
