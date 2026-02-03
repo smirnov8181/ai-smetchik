@@ -227,7 +227,7 @@ export function parseContractorXlsx(buffer: Buffer): ParsedContractorEstimate {
       metadata = { ...extractMetadata(sheet), currency };
     }
 
-    const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+    const data = XLSX.utils.sheet_to_json(sheet, {
       header: 1,
       defval: ""
     }) as unknown[][];
