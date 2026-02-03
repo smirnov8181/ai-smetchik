@@ -39,7 +39,7 @@ export async function GET(
 
   const pdfBuffer = generateEstimatePdf(estimate.result, id);
 
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(new Uint8Array(pdfBuffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
