@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { Download, AlertTriangle, Loader2 } from "lucide-react";
+import { Download, FileSpreadsheet, AlertTriangle, Loader2 } from "lucide-react";
 
 interface EstimateResultProps {
   result: EstimateResultType;
@@ -31,13 +31,15 @@ const confidenceLabels: Record<string, { label: string; variant: "default" | "se
 };
 
 export function EstimateResult({ result, estimateId }: EstimateResultProps) {
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
 
-  const handleExportPdf = async () => {
-    setIsExporting(true);
+  const handleExport = async (format: "pdf" | "csv") => {
+    const setExporting = format === "pdf" ? setIsExportingPdf : setIsExportingCsv;
+    setExporting(true);
     try {
-      const response = await fetch(`/api/estimates/${estimateId}/export`, {
-        method: "POST",
+      const response = await fetch(`/api/estimates/${estimateId}/export?format=${format}`, {
+        method: "GET",
       });
 
       if (!response.ok) throw new Error("Export failed");
@@ -46,15 +48,18 @@ export function EstimateResult({ result, estimateId }: EstimateResultProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `smeta-${estimateId.slice(0, 8)}.pdf`;
+      a.download = `smeta-${estimateId.slice(0, 8)}.${format}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Export error:", error);
     } finally {
-      setIsExporting(false);
+      setExporting(false);
     }
   };
+
+  const handleExportPdf = () => handleExport("pdf");
+  const handleExportCsv = () => handleExport("csv");
 
   const conf = confidenceLabels[result.confidence] || confidenceLabels.medium;
 
@@ -120,14 +125,24 @@ export function EstimateResult({ result, estimateId }: EstimateResultProps) {
 
           <Separator className="my-4" />
 
-          <Button onClick={handleExportPdf} disabled={isExporting}>
-            {isExporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            Скачать PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleExportPdf} disabled={isExportingPdf}>
+              {isExportingPdf ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Скачать PDF
+            </Button>
+            <Button onClick={handleExportCsv} disabled={isExportingCsv} variant="outline">
+              {isExportingCsv ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+              )}
+              Скачать CSV
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

@@ -89,7 +89,7 @@ export function VerificationForm() {
           </div>
 
           <div className="space-y-2">
-            <Label>Или загрузите файл сметы (PDF, фото)</Label>
+            <Label>Или загрузите файл сметы (PDF, фото, XLSX)</Label>
             <FileUpload files={files} onFilesChange={setFiles} maxFiles={5} />
           </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Upload, X, FileText, Image } from "lucide-react";
+import { Upload, X, FileText, Image, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileUploadProps {
@@ -35,7 +35,10 @@ export function FileUpload({
 
       const droppedFiles = Array.from(e.dataTransfer.files).filter(
         (f) =>
-          f.type.startsWith("image/") || f.type === "application/pdf"
+          f.type.startsWith("image/") ||
+          f.type === "application/pdf" ||
+          f.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+          f.name.endsWith(".xlsx")
       );
 
       const newFiles = [...files, ...droppedFiles].slice(0, maxFiles);
@@ -81,7 +84,7 @@ export function FileUpload({
           Перетащите файлы сюда или нажмите для выбора
         </p>
         <p className="text-xs text-muted-foreground mb-4">
-          PDF, JPG, PNG (макс. {maxFiles} файлов)
+          PDF, JPG, PNG, XLSX (макс. {maxFiles} файлов)
         </p>
         <label>
           <Button variant="outline" size="sm" asChild>
@@ -91,7 +94,7 @@ export function FileUpload({
             type="file"
             className="hidden"
             multiple
-            accept="image/*,.pdf"
+            accept="image/*,.pdf,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={handleFileSelect}
           />
         </label>
@@ -106,6 +109,8 @@ export function FileUpload({
             >
               {file.type.startsWith("image/") ? (
                 <Image className="h-4 w-4 text-blue-500" />
+              ) : file.name.endsWith(".xlsx") || file.type.includes("spreadsheet") ? (
+                <FileSpreadsheet className="h-4 w-4 text-green-600" />
               ) : (
                 <FileText className="h-4 w-4 text-red-500" />
               )}

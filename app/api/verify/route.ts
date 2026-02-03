@@ -6,6 +6,7 @@ import {
   generateVerificationResult,
 } from "@/lib/ai/verifier";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
+import { parseContractorXlsx, isXlsxBuffer } from "@/lib/utils/xlsx-parser";
 
 // GET /api/verify — list user's verifications
 export async function GET() {
@@ -52,14 +53,20 @@ export async function POST(request: NextRequest) {
     const text = formData.get("text") as string | null;
     const files = formData.getAll("files") as File[];
 
-    let inputType: "text" | "pdf" | "photo" | "mixed" = "text";
+    let inputType: "text" | "pdf" | "photo" | "mixed" | "xlsx" = "text";
     if (files.length > 0 && text) inputType = "mixed";
     else if (files.length > 0) {
       const hasImages = files.some((f) => f.type.startsWith("image/"));
       const hasPdfs = files.some((f) => f.type === "application/pdf");
-      if (hasImages && hasPdfs) inputType = "mixed";
+      const hasXlsx = files.some((f) =>
+        f.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        f.name.endsWith(".xlsx")
+      );
+      if (hasXlsx && files.length === 1) inputType = "xlsx";
+      else if (hasImages && hasPdfs) inputType = "mixed";
       else if (hasImages) inputType = "photo";
-      else inputType = "pdf";
+      else if (hasPdfs) inputType = "pdf";
+      else if (hasXlsx) inputType = "xlsx";
     }
 
     const { data: verification, error: createError } = await supabase
@@ -111,6 +118,7 @@ async function processVerification(
   try {
     let pdfText = "";
     const imageUrls: string[] = [];
+    let xlsxParsedItems: Awaited<ReturnType<typeof parseContractorXlsx>> | null = null;
 
     for (const file of files) {
       const buffer = Buffer.from(await file.arrayBuffer());
@@ -124,7 +132,20 @@ async function processVerification(
         data: { publicUrl },
       } = supabase.storage.from("estimate-files").getPublicUrl(fileName);
 
-      if (file.type === "application/pdf") {
+      // Handle XLSX files - direct parsing without AI
+      const isXlsx = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                     file.name.endsWith(".xlsx") ||
+                     isXlsxBuffer(buffer);
+
+      if (isXlsx) {
+        xlsxParsedItems = parseContractorXlsx(buffer);
+        await supabase.from("verification_files").insert({
+          verification_id: verificationId,
+          file_url: publicUrl,
+          file_type: "xlsx",
+          original_name: file.name,
+        });
+      } else if (file.type === "application/pdf") {
         pdfText += await parsePdfBuffer(buffer);
         await supabase.from("verification_files").insert({
           verification_id: verificationId,
@@ -145,11 +166,20 @@ async function processVerification(
     }
 
     // Step 1: Parse contractor estimate
-    const { items: contractorItems } = await parseContractorEstimate({
-      text: text || undefined,
-      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
-      pdfText: pdfText || undefined,
-    });
+    let contractorItems;
+
+    if (xlsxParsedItems && xlsxParsedItems.items.length > 0) {
+      // Use directly parsed xlsx data (no AI needed)
+      contractorItems = xlsxParsedItems.items;
+    } else {
+      // Use AI to parse PDF/photo/text
+      const { items } = await parseContractorEstimate({
+        text: text || undefined,
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+        pdfText: pdfText || undefined,
+      });
+      contractorItems = items;
+    }
 
     await supabase
       .from("verifications")

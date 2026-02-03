@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generateEstimatePdf } from "@/lib/utils/export";
+import { generateEstimatePdf, generateEstimateCsv } from "@/lib/utils/export";
 import { Estimate } from "@/lib/supabase/types";
 
-// GET /api/estimates/:id/export
+// GET /api/estimates/:id/export?format=pdf|csv
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const supabase = await createClient();
+
+  // Get format from query params (default: pdf)
+  const { searchParams } = new URL(request.url);
+  const format = searchParams.get("format") || "pdf";
 
   const {
     data: { user },
@@ -37,13 +41,26 @@ export async function GET(
     );
   }
 
+  // CSV export
+  if (format === "csv") {
+    const csvContent = generateEstimateCsv(estimate.result, id);
+    return new NextResponse(csvContent, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="smeta-${id.slice(0, 8)}.csv"`,
+      },
+    });
+  }
+
+  // PDF export (default)
   const pdfBuffer = generateEstimatePdf(estimate.result, id);
 
   return new NextResponse(new Uint8Array(pdfBuffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="smeta-${id}.pdf"`,
+      "Content-Disposition": `attachment; filename="smeta-${id.slice(0, 8)}.pdf"`,
     },
   });
 }
