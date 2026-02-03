@@ -167,6 +167,7 @@ export default function EstimateDetailPage() {
         <EstimateResult
           result={estimate.result as EstimateResultType}
           estimateId={estimate.id}
+          shareToken={estimate.share_token}
         />
       )}
 

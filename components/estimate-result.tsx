@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, AlertTriangle, Loader2, Info, TrendingUp } from "lucide-react";
+import { FileSpreadsheet, AlertTriangle, Loader2, Info, TrendingUp, Share2, Check, Link } from "lucide-react";
 
 interface EstimateResultProps {
   result: EstimateResultType;
   estimateId: string;
+  shareToken?: string | null;
+  isPublic?: boolean; // true when viewing via share link
 }
 
 function formatPrice(amount: number): string {
@@ -55,8 +57,46 @@ const confidenceConfig: Record<string, {
   },
 };
 
-export function EstimateResult({ result, estimateId }: EstimateResultProps) {
+export function EstimateResult({ result, estimateId, shareToken: initialShareToken, isPublic = false }: EstimateResultProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(initialShareToken || null);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (shareToken) {
+      // Already have token, just copy
+      await copyShareLink(shareToken);
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      const response = await fetch(`/api/estimates/${estimateId}/share`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create share link");
+      }
+
+      setShareToken(data.share_token);
+      await copyShareLink(data.share_token);
+    } catch (error) {
+      console.error("Share error:", error);
+      alert(error instanceof Error ? error.message : "Ошибка создания ссылки");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const copyShareLink = async (token: string) => {
+    const url = `${window.location.origin}/share/${token}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleExportCsv = async () => {
     setIsExporting(true);
@@ -196,14 +236,37 @@ export function EstimateResult({ result, estimateId }: EstimateResultProps) {
 
           <Separator className="my-4" />
 
-          <Button onClick={handleExportCsv} disabled={isExporting}>
-            {isExporting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
+          <div className="flex flex-wrap gap-2">
+            {!isPublic && (
+              <Button onClick={handleExportCsv} disabled={isExporting}>
+                {isExporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                )}
+                Скачать CSV
+              </Button>
             )}
-            Скачать CSV
-          </Button>
+
+            {!isPublic && (
+              <Button
+                variant={shareToken ? "outline" : "secondary"}
+                onClick={handleShare}
+                disabled={isSharing}
+              >
+                {isSharing ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : copied ? (
+                  <Check className="mr-2 h-4 w-4 text-green-600" />
+                ) : shareToken ? (
+                  <Link className="mr-2 h-4 w-4" />
+                ) : (
+                  <Share2 className="mr-2 h-4 w-4" />
+                )}
+                {copied ? "Ссылка скопирована!" : shareToken ? "Копировать ссылку" : "Поделиться"}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
