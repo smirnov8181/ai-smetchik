@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, ShieldCheck } from "lucide-react";
+import { EstimateCard } from "@/components/estimate-card";
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   draft: { label: "Черновик", variant: "outline" },
@@ -99,47 +100,9 @@ export default async function DashboardPage() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {estimates.map((estimate) => {
-              const status = statusLabels[estimate.status] || statusLabels.draft;
-              return (
-                <Link
-                  key={estimate.id}
-                  href={`/dashboard/estimates/${estimate.id}`}
-                >
-                  <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {estimate.input_text?.slice(0, 80) ||
-                            `Смета от ${new Date(estimate.created_at).toLocaleDateString("ru-RU")}`}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(estimate.created_at).toLocaleDateString(
-                            "ru-RU",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4 ml-4">
-                        {estimate.total_amount && (
-                          <span className="font-semibold whitespace-nowrap">
-                            {Number(estimate.total_amount).toLocaleString("ru-RU")}{" "}
-                            руб.
-                          </span>
-                        )}
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
+            {estimates.map((estimate) => (
+              <EstimateCard key={estimate.id} estimate={estimate} />
+            ))}
           </div>
         )}
       </div>

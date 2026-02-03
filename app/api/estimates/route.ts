@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 
 // Force Node.js runtime (not Edge) for PDF parsing
 export const runtime = "nodejs";
+// Increase timeout for AI processing (60s for Pro, 10s for Hobby)
+export const maxDuration = 60;
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { normalizeInput } from "@/lib/ai/normalizer";
@@ -103,10 +106,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process in background (non-blocking response)
-    processEstimate(estimate.id, user.id, text, files, serviceClient).catch(
-      (err) => console.error("Pipeline error:", err)
-    );
+    // Schedule processing after response is sent (Next.js 15 after API)
+    after(async () => {
+      await processEstimate(estimate.id, user.id, text, files, serviceClient).catch(
+        (err) => console.error("Pipeline error:", err)
+      );
+    });
 
     return NextResponse.json({ estimate: { id: estimate.id, status: "processing" } });
   } catch (error) {
