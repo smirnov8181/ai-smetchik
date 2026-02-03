@@ -1,0 +1,362 @@
+[
+  {
+    "category": "Демонтаж",
+    "work_name": "Демонтаж обоев",
+    "unit": "м²",
+    "price_min": 80,
+    "price_avg": 120,
+    "price_max": 200
+  },
+  {
+    "category": "Демонтаж",
+    "work_name": "Демонтаж плитки",
+    "unit": "м²",
+    "price_min": 150,
+    "price_avg": 250,
+    "price_max": 400
+  },
+  {
+    "category": "Демонтаж",
+    "work_name": "Демонтаж напольного покрытия",
+    "unit": "м²",
+    "price_min": 100,
+    "price_avg": 180,
+    "price_max": 300
+  },
+  {
+    "category": "Демонтаж",
+    "work_name": "Демонтаж старой штукатурки",
+    "unit": "м²",
+    "price_min": 200,
+    "price_avg": 350,
+    "price_max": 500
+  },
+  {
+    "category": "Демонтаж",
+    "work_name": "Демонтаж дверей",
+    "unit": "шт",
+    "price_min": 500,
+    "price_avg": 800,
+    "price_max": 1500
+  },
+  {
+    "category": "Демонтаж",
+    "work_name": "Демонтаж сантехники",
+    "unit": "шт",
+    "price_min": 800,
+    "price_avg": 1500,
+    "price_max": 3000
+  },
+  {
+    "category": "Стены",
+    "work_name": "Штукатурка стен по маякам",
+    "unit": "м²",
+    "price_min": 400,
+    "price_avg": 550,
+    "price_max": 800
+  },
+  {
+    "category": "Стены",
+    "work_name": "Шпаклёвка стен под обои",
+    "unit": "м²",
+    "price_min": 200,
+    "price_avg": 300,
+    "price_max": 450
+  },
+  {
+    "category": "Стены",
+    "work_name": "Шпаклёвка стен под покраску",
+    "unit": "м²",
+    "price_min": 350,
+    "price_avg": 500,
+    "price_max": 700
+  },
+  {
+    "category": "Стены",
+    "work_name": "Поклейка обоев",
+    "unit": "м²",
+    "price_min": 200,
+    "price_avg": 350,
+    "price_max": 600
+  },
+  {
+    "category": "Стены",
+    "work_name": "Покраска стен",
+    "unit": "м²",
+    "price_min": 200,
+    "price_avg": 300,
+    "price_max": 500
+  },
+  {
+    "category": "Стены",
+    "work_name": "Укладка плитки на стены",
+    "unit": "м²",
+    "price_min": 800,
+    "price_avg": 1200,
+    "price_max": 2000
+  },
+  {
+    "category": "Стены",
+    "work_name": "Грунтовка стен",
+    "unit": "м²",
+    "price_min": 50,
+    "price_avg": 80,
+    "price_max": 120
+  },
+  {
+    "category": "Стены",
+    "work_name": "Монтаж гипсокартона на стены",
+    "unit": "м²",
+    "price_min": 400,
+    "price_avg": 600,
+    "price_max": 900
+  },
+  {
+    "category": "Потолок",
+    "work_name": "Натяжной потолок",
+    "unit": "м²",
+    "price_min": 400,
+    "price_avg": 700,
+    "price_max": 1200
+  },
+  {
+    "category": "Потолок",
+    "work_name": "Шпаклёвка потолка",
+    "unit": "м²",
+    "price_min": 300,
+    "price_avg": 450,
+    "price_max": 650
+  },
+  {
+    "category": "Потолок",
+    "work_name": "Покраска потолка",
+    "unit": "м²",
+    "price_min": 200,
+    "price_avg": 350,
+    "price_max": 500
+  },
+  {
+    "category": "Потолок",
+    "work_name": "Монтаж гипсокартона на потолок",
+    "unit": "м²",
+    "price_min": 500,
+    "price_avg": 750,
+    "price_max": 1100
+  },
+  {
+    "category": "Пол",
+    "work_name": "Стяжка пола",
+    "unit": "м²",
+    "price_min": 350,
+    "price_avg": 500,
+    "price_max": 800
+  },
+  {
+    "category": "Пол",
+    "work_name": "Наливной пол",
+    "unit": "м²",
+    "price_min": 250,
+    "price_avg": 400,
+    "price_max": 600
+  },
+  {
+    "category": "Пол",
+    "work_name": "Укладка ламината",
+    "unit": "м²",
+    "price_min": 300,
+    "price_avg": 450,
+    "price_max": 700
+  },
+  {
+    "category": "Пол",
+    "work_name": "Укладка плитки на пол",
+    "unit": "м²",
+    "price_min": 800,
+    "price_avg": 1200,
+    "price_max": 1800
+  },
+  {
+    "category": "Пол",
+    "work_name": "Укладка паркетной доски",
+    "unit": "м²",
+    "price_min": 400,
+    "price_avg": 600,
+    "price_max": 1000
+  },
+  {
+    "category": "Пол",
+    "work_name": "Укладка линолеума",
+    "unit": "м²",
+    "price_min": 150,
+    "price_avg": 250,
+    "price_max": 400
+  },
+  {
+    "category": "Пол",
+    "work_name": "Монтаж плинтусов",
+    "unit": "м.п.",
+    "price_min": 100,
+    "price_avg": 200,
+    "price_max": 350
+  },
+  {
+    "category": "Электрика",
+    "work_name": "Монтаж электропроводки (точка)",
+    "unit": "шт",
+    "price_min": 800,
+    "price_avg": 1200,
+    "price_max": 2000
+  },
+  {
+    "category": "Электрика",
+    "work_name": "Установка розетки",
+    "unit": "шт",
+    "price_min": 300,
+    "price_avg": 500,
+    "price_max": 800
+  },
+  {
+    "category": "Электрика",
+    "work_name": "Установка выключателя",
+    "unit": "шт",
+    "price_min": 300,
+    "price_avg": 500,
+    "price_max": 800
+  },
+  {
+    "category": "Электрика",
+    "work_name": "Монтаж электрощита",
+    "unit": "шт",
+    "price_min": 5000,
+    "price_avg": 8000,
+    "price_max": 15000
+  },
+  {
+    "category": "Электрика",
+    "work_name": "Установка светильников",
+    "unit": "шт",
+    "price_min": 300,
+    "price_avg": 600,
+    "price_max": 1200
+  },
+  {
+    "category": "Сантехника",
+    "work_name": "Установка унитаза",
+    "unit": "шт",
+    "price_min": 2000,
+    "price_avg": 3500,
+    "price_max": 6000
+  },
+  {
+    "category": "Сантехника",
+    "work_name": "Установка ванны",
+    "unit": "шт",
+    "price_min": 3000,
+    "price_avg": 5000,
+    "price_max": 10000
+  },
+  {
+    "category": "Сантехника",
+    "work_name": "Установка раковины",
+    "unit": "шт",
+    "price_min": 1500,
+    "price_avg": 2500,
+    "price_max": 5000
+  },
+  {
+    "category": "Сантехника",
+    "work_name": "Установка смесителя",
+    "unit": "шт",
+    "price_min": 800,
+    "price_avg": 1500,
+    "price_max": 3000
+  },
+  {
+    "category": "Сантехника",
+    "work_name": "Разводка труб водоснабжения",
+    "unit": "точка",
+    "price_min": 1500,
+    "price_avg": 2500,
+    "price_max": 4000
+  },
+  {
+    "category": "Сантехника",
+    "work_name": "Разводка канализации",
+    "unit": "точка",
+    "price_min": 1500,
+    "price_avg": 2500,
+    "price_max": 4500
+  },
+  {
+    "category": "Двери",
+    "work_name": "Установка межкомнатной двери",
+    "unit": "шт",
+    "price_min": 2000,
+    "price_avg": 3500,
+    "price_max": 6000
+  },
+  {
+    "category": "Двери",
+    "work_name": "Установка входной двери",
+    "unit": "шт",
+    "price_min": 3000,
+    "price_avg": 5000,
+    "price_max": 10000
+  },
+  {
+    "category": "Окна",
+    "work_name": "Установка подоконника",
+    "unit": "шт",
+    "price_min": 800,
+    "price_avg": 1500,
+    "price_max": 3000
+  },
+  {
+    "category": "Окна",
+    "work_name": "Установка откосов",
+    "unit": "м.п.",
+    "price_min": 400,
+    "price_avg": 700,
+    "price_max": 1200
+  },
+  {
+    "category": "Черновые работы",
+    "work_name": "Гидроизоляция пола",
+    "unit": "м²",
+    "price_min": 300,
+    "price_avg": 500,
+    "price_max": 800
+  },
+  {
+    "category": "Черновые работы",
+    "work_name": "Звукоизоляция стен",
+    "unit": "м²",
+    "price_min": 500,
+    "price_avg": 800,
+    "price_max": 1500
+  },
+  {
+    "category": "Черновые работы",
+    "work_name": "Утепление стен",
+    "unit": "м²",
+    "price_min": 400,
+    "price_avg": 700,
+    "price_max": 1200
+  },
+  {
+    "category": "Уборка",
+    "work_name": "Вывоз строительного мусора",
+    "unit": "м³",
+    "price_min": 800,
+    "price_avg": 1500,
+    "price_max": 3000
+  },
+  {
+    "category": "Уборка",
+    "work_name": "Финальная уборка",
+    "unit": "м²",
+    "price_min": 50,
+    "price_avg": 100,
+    "price_max": 200
+  }
+]
