@@ -105,14 +105,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process synchronously (Vercel kills background tasks after response)
-    try {
-      await processEstimate(estimate.id, user.id, text, files, serviceClient);
-      return NextResponse.json({ estimate: { id: estimate.id, status: "ready" } });
-    } catch (err) {
-      console.error("Estimate pipeline error:", err);
-      return NextResponse.json({ estimate: { id: estimate.id, status: "error" } });
-    }
+    // Use streaming to keep connection alive during processing
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Send initial response
+        controller.enqueue(encoder.encode(`data: {"status":"processing","id":"${estimate.id}"}\n\n`));
+
+        try {
+          // Process with periodic heartbeats
+          const heartbeat = setInterval(() => {
+            controller.enqueue(encoder.encode(`data: {"status":"processing"}\n\n`));
+          }, 5000);
+
+          await processEstimate(estimate.id, user.id, text, files, serviceClient);
+
+          clearInterval(heartbeat);
+          controller.enqueue(encoder.encode(`data: {"status":"ready","id":"${estimate.id}"}\n\n`));
+        } catch (err) {
+          console.error("Estimate pipeline error:", err);
+          controller.enqueue(encoder.encode(`data: {"status":"error","error":"${err instanceof Error ? err.message : 'Unknown error'}"}\n\n`));
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      },
+    });
   } catch (error) {
     console.error("Create estimate error:", error);
     return NextResponse.json(
