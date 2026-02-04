@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 // GET /api/verify/:id
 export async function GET(
@@ -40,7 +40,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  console.log(`[DELETE verification] Starting delete for ${id}`);
 
   const supabase = await createClient();
 
@@ -49,82 +48,19 @@ export async function DELETE(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    console.log(`[DELETE verification] Unauthorized`);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Verify ownership before delete
-  const { data: verification, error: findError } = await supabase
+  // Simple delete - just delete the record (rely on CASCADE for related records)
+  const { error } = await supabase
     .from("verifications")
-    .select("id")
+    .delete()
     .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (findError) {
-    console.log(`[DELETE verification] Find error:`, findError.message);
-  }
-
-  if (!verification) {
-    console.log(`[DELETE verification] Not found or not owned`);
-    return NextResponse.json({ error: "Verification not found" }, { status: 404 });
-  }
-
-  // Use service client for deletion (bypasses RLS)
-  const serviceClient = createServiceClient();
-
-  // Try to delete files from storage (ignore errors - files might not exist)
-  try {
-    const { data: files } = await serviceClient
-      .from("verification_files")
-      .select("file_url")
-      .eq("verification_id", id);
-
-    console.log(`[DELETE verification] Found ${files?.length || 0} files`);
-
-    if (files && files.length > 0) {
-      const filePaths = files.map((f) => {
-        try {
-          const url = new URL(f.file_url);
-          return url.pathname.split("/estimate-files/")[1];
-        } catch {
-          return null;
-        }
-      }).filter(Boolean) as string[];
-
-      if (filePaths.length > 0) {
-        console.log(`[DELETE verification] Removing files:`, filePaths);
-        await serviceClient.storage.from("estimate-files").remove(filePaths);
-      }
-    }
-  } catch (fileError) {
-    console.log(`[DELETE verification] File cleanup error (ignored):`, fileError);
-  }
-
-  // Delete verification_files first (in case no CASCADE)
-  console.log(`[DELETE verification] Deleting verification_files records`);
-  const { error: filesDeleteError } = await serviceClient
-    .from("verification_files")
-    .delete()
-    .eq("verification_id", id);
-
-  if (filesDeleteError) {
-    console.log(`[DELETE verification] Files delete error:`, filesDeleteError.message);
-    // Continue anyway - table might not exist or have no records
-  }
-
-  // Delete verification
-  console.log(`[DELETE verification] Deleting verification record`);
-  const { error } = await serviceClient
-    .from("verifications")
-    .delete()
-    .eq("id", id);
+    .eq("user_id", user.id);
 
   if (error) {
-    console.log(`[DELETE verification] Delete error:`, error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  console.log(`[DELETE verification] Success`);
   return NextResponse.json({ success: true });
 }
