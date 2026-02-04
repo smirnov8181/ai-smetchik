@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 
 // Force Node.js runtime (not Edge) for PDF parsing
 export const runtime = "nodejs";
@@ -106,12 +105,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Schedule processing after response is sent (Next.js 15 after API)
-    after(async () => {
-      await processEstimate(estimate.id, user.id, text, files, serviceClient).catch(
-        (err) => console.error("Pipeline error:", err)
-      );
-    });
+    // Process in background (same pattern as verify route)
+    processEstimate(estimate.id, user.id, text, files, serviceClient).catch(
+      (err) => console.error("Estimate pipeline error:", err)
+    );
 
     return NextResponse.json({ estimate: { id: estimate.id, status: "processing" } });
   } catch (error) {
@@ -131,26 +128,64 @@ async function processEstimate(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any
 ) {
+  const log = (step: string, data?: unknown) => {
+    console.log(`[Estimate ${estimateId.slice(0, 8)}] ${step}`, data || "");
+  };
+
   try {
+    log("START", { filesCount: files.length, hasText: !!text });
+
     // Process files
     let pdfText = "";
     const imageUrls: string[] = [];
 
     for (const file of files) {
+      log(`Processing file: ${file.name}`, { type: file.type, size: file.size });
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        log(`File too large, skipping: ${file.name}`);
+        continue;
+      }
+
       const buffer = Buffer.from(await file.arrayBuffer());
       const fileName = `${userId}/${estimateId}/${file.name}`;
 
       // Upload to Supabase Storage
-      await supabase.storage.from("estimate-files").upload(fileName, buffer, {
-        contentType: file.type,
-      });
+      const { error: uploadError } = await supabase.storage
+        .from("estimate-files")
+        .upload(fileName, buffer, { contentType: file.type });
+
+      if (uploadError) {
+        log(`Upload error for ${file.name}:`, uploadError.message);
+        // Continue processing even if upload fails
+      }
 
       const {
         data: { publicUrl },
       } = supabase.storage.from("estimate-files").getPublicUrl(fileName);
 
       if (file.type === "application/pdf") {
-        pdfText += await parsePdfBuffer(buffer);
+        log(`Parsing PDF: ${file.name}`);
+        try {
+          const extractedText = await parsePdfBuffer(buffer);
+          log(`PDF text extracted`, { length: extractedText.length });
+
+          // If PDF is empty (likely a scan), treat as image
+          if (extractedText.trim().length < 50) {
+            log(`PDF appears to be a scan (empty text), treating as image`);
+            const base64 = buffer.toString("base64");
+            imageUrls.push(`data:application/pdf;base64,${base64}`);
+          } else {
+            pdfText += extractedText + "\n";
+          }
+        } catch (pdfError) {
+          log(`PDF parse error:`, pdfError instanceof Error ? pdfError.message : pdfError);
+          // Try to treat as image if parsing fails
+          const base64 = buffer.toString("base64");
+          imageUrls.push(`data:application/pdf;base64,${base64}`);
+        }
+
         await supabase.from("estimate_files").insert({
           estimate_id: estimateId,
           file_url: publicUrl,
@@ -158,10 +193,11 @@ async function processEstimate(
           original_name: file.name,
         });
       } else if (file.type.startsWith("image/")) {
-        // Convert to base64 data URL for OpenAI vision
+        log(`Processing image: ${file.name}`);
         const base64 = buffer.toString("base64");
         const dataUrl = `data:${file.type};base64,${base64}`;
         imageUrls.push(dataUrl);
+
         await supabase.from("estimate_files").insert({
           estimate_id: estimateId,
           file_url: publicUrl,
@@ -171,12 +207,16 @@ async function processEstimate(
       }
     }
 
+    log("Files processed", { pdfTextLength: pdfText.length, imagesCount: imageUrls.length });
+
     // Step 1: Normalize input
+    log("Step 1: Normalizing input...");
     const normalizedInput = await normalizeInput({
       text: text || undefined,
       imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       pdfText: pdfText || undefined,
     });
+    log("Step 1 complete", { rooms: normalizedInput.rooms?.length || 0 });
 
     // Update with normalized data
     await supabase
@@ -185,13 +225,19 @@ async function processEstimate(
       .eq("id", estimateId);
 
     // Step 2: Extract work items
+    log("Step 2: Extracting work items...");
     const workItems = await extractWorkItems(normalizedInput);
+    log("Step 2 complete", { itemsCount: workItems.length });
 
     // Step 3: Calculate prices
+    log("Step 3: Calculating prices...");
     const pricedItems = await calculatePrices(workItems);
+    log("Step 3 complete", { pricedCount: pricedItems.length });
 
     // Step 4: Generate final estimate
+    log("Step 4: Generating estimate...");
     const result = await generateEstimate(pricedItems, normalizedInput);
+    log("Step 4 complete", { total: result.total, sectionsCount: result.sections?.length || 0 });
 
     // Save result
     await supabase
@@ -203,23 +249,27 @@ async function processEstimate(
       })
       .eq("id", estimateId);
 
+    log("SUCCESS", { total: result.total });
+
     // Increment usage counter
     const { error: rpcError } = await supabase.rpc("increment_estimates_used", { uid: userId });
     if (rpcError) {
-      // Fallback: direct increment via SQL
+      log("RPC error, using fallback:", rpcError.message);
       await supabase
         .from("subscriptions")
-        .update({ estimates_used: 1 }) // Will be fixed with proper SQL
+        .update({ estimates_used: 1 })
         .eq("user_id", userId);
     }
   } catch (error) {
-    console.error("Pipeline error:", error);
+    const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+    log("ERROR", errorMsg);
+    console.error("Full error:", error);
+
     await supabase
       .from("estimates")
       .update({
         status: "error",
-        error_message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+        error_message: errorMsg,
       })
       .eq("id", estimateId);
   }
