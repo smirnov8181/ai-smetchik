@@ -30,6 +30,35 @@ function formatPercent(part: number, total: number): number {
   return Math.round((part / total) * 100);
 }
 
+// Quality tiers for materials
+type QualityTier = "economy" | "standard" | "comfort";
+
+const qualityTiers: Record<QualityTier, {
+  label: string;
+  multiplier: number;
+  description: string;
+  recommendation: string;
+}> = {
+  economy: {
+    label: "Эконом",
+    multiplier: 0.7,
+    description: "Бюджетные материалы, базовое качество",
+    recommendation: "⚠️ Не экономьте на плитке в мокрых зонах и на электрике — это безопасность.",
+  },
+  standard: {
+    label: "Стандарт",
+    multiplier: 1.0,
+    description: "Средний сегмент, оптимальное соотношение цена/качество",
+    recommendation: "✓ Оптимальный выбор для большинства квартир. Хорошее качество без переплат.",
+  },
+  comfort: {
+    label: "Комфорт",
+    multiplier: 1.5,
+    description: "Качественные материалы, повышенный комфорт",
+    recommendation: "Разница особенно заметна в плитке, сантехнике и напольных покрытиях.",
+  },
+};
+
 // Confidence levels with human-friendly explanations
 const confidenceConfig: Record<string, {
   label: string;
@@ -105,6 +134,15 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
   const [isSharing, setIsSharing] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(initialShareToken || null);
   const [copied, setCopied] = useState(false);
+  const [qualityTier, setQualityTier] = useState<QualityTier>("standard");
+
+  // Recalculate prices based on quality tier
+  const tierConfig = qualityTiers[qualityTier];
+  const adjustedMaterials = Math.round(result.subtotal_materials * tierConfig.multiplier);
+  const materialsDiff = adjustedMaterials - result.subtotal_materials;
+  const adjustedTotal = result.subtotal_labor + adjustedMaterials + result.overhead;
+  const adjustedOverhead = Math.round(adjustedTotal * 0.1); // Recalc overhead
+  const finalTotal = result.subtotal_labor + adjustedMaterials + adjustedOverhead;
 
   const handleShare = async () => {
     if (shareToken) {
@@ -170,17 +208,24 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
 
   const conf = confidenceConfig[result.confidence] || confidenceConfig.medium;
 
-  // Calculate price range based on confidence variance
-  const minPrice = Math.round(result.total * (1 - conf.variance / 100));
-  const maxPrice = Math.round(result.total * (1 + conf.variance / 100));
+  // Calculate price range based on confidence variance (using adjusted total)
+  const minPrice = Math.round(finalTotal * (1 - conf.variance / 100));
+  const maxPrice = Math.round(finalTotal * (1 + conf.variance / 100));
 
-  // Calculate percentages for price structure
-  const laborPercent = formatPercent(result.subtotal_labor, result.total);
-  const materialsPercent = formatPercent(result.subtotal_materials, result.total);
-  const overheadPercent = formatPercent(result.overhead, result.total);
+  // Calculate percentages for price structure (using adjusted values)
+  const laborPercent = formatPercent(result.subtotal_labor, finalTotal);
+  const materialsPercent = formatPercent(adjustedMaterials, finalTotal);
+  const overheadPercent = formatPercent(adjustedOverhead, finalTotal);
 
   // Human summary
   const humanSummary = generateHumanSummary(result.sections);
+
+  // Calculate prices for all tiers (for comparison display)
+  const tierPrices = {
+    economy: Math.round(result.subtotal_labor + result.subtotal_materials * 0.7 + result.overhead * 0.9),
+    standard: result.total,
+    comfort: Math.round(result.subtotal_labor + result.subtotal_materials * 1.5 + result.overhead * 1.2),
+  };
 
   return (
     <div className="space-y-6">
@@ -198,17 +243,57 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Quality tier selector */}
+          <div className="bg-muted/30 rounded-xl p-4">
+            <p className="text-sm font-medium text-center mb-3">Уровень материалов</p>
+            <div className="flex gap-2 justify-center">
+              {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => (
+                <button
+                  key={tier}
+                  onClick={() => setQualityTier(tier)}
+                  className={`
+                    px-4 py-2 rounded-lg text-sm font-medium transition-all
+                    ${qualityTier === tier
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-background hover:bg-muted border border-border"
+                    }
+                  `}
+                >
+                  <div>{qualityTiers[tier].label}</div>
+                  <div className={`text-xs ${qualityTier === tier ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                    {formatPrice(tierPrices[tier])} ₽
+                  </div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              {tierConfig.description}
+            </p>
+          </div>
+
           {/* Main price block */}
           <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">Ориентировочная стоимость ремонта</p>
               <p className="text-4xl font-bold text-primary mb-1">
-                {formatPrice(result.total)} ₽
+                {formatPrice(finalTotal)} ₽
+                {qualityTier !== "standard" && (
+                  <span className={`text-lg ml-2 ${materialsDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
+                    {materialsDiff > 0 ? "+" : ""}{formatPrice(materialsDiff)}
+                  </span>
+                )}
               </p>
               <p className="text-muted-foreground">
                 от {formatPrice(minPrice)} до {formatPrice(maxPrice)} ₽
               </p>
             </div>
+          </div>
+
+          {/* Quality recommendation */}
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              {tierConfig.recommendation}
+            </p>
           </div>
 
           {/* Price structure - visual breakdown */}
@@ -251,7 +336,7 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
                 <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0" />
                 <div>
                   <p className="text-muted-foreground">Материалы</p>
-                  <p className="font-semibold">{formatPrice(result.subtotal_materials)} ₽</p>
+                  <p className="font-semibold">{formatPrice(adjustedMaterials)} ₽</p>
                   <p className="text-xs text-muted-foreground">{materialsPercent}%</p>
                 </div>
               </div>
@@ -259,7 +344,7 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
                 <div className="w-3 h-3 rounded-full bg-orange-400 flex-shrink-0" />
                 <div>
                   <p className="text-muted-foreground">Накладные</p>
-                  <p className="font-semibold">{formatPrice(result.overhead)} ₽</p>
+                  <p className="font-semibold">{formatPrice(adjustedOverhead)} ₽</p>
                   <p className="text-xs text-muted-foreground">{overheadPercent}%</p>
                 </div>
               </div>
