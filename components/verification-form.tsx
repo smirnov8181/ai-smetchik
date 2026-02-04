@@ -40,12 +40,16 @@ export function VerificationForm() {
       }
       for (const file of files) {
         formData.append("files", file);
+        console.log("[Form] Appending file:", file.name, file.type, file.size);
       }
 
+      console.log("[Form] Sending request to /api/verify...");
       const response = await fetch("/api/verify", {
         method: "POST",
         body: formData,
       });
+
+      console.log("[Form] Response received:", response.status, response.ok);
 
       if (!response.ok) {
         const text = await response.text();
@@ -64,9 +68,13 @@ export function VerificationForm() {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log("[Form] Stream done");
+          break;
+        }
 
         const text = decoder.decode(value);
+        console.log("[Form] Stream chunk:", text);
         const lines = text.split("\n");
 
         for (const line of lines) {
