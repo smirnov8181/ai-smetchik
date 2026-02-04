@@ -42,6 +42,8 @@ export async function GET() {
 
 // POST /api/verify — create new verification
 export async function POST(request: NextRequest) {
+  console.log("[Verify API] POST request received");
+
   const supabase = await createClient();
   const serviceClient = createServiceClient();
 
@@ -49,14 +51,18 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  console.log("[Verify API] User:", user?.id);
+
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const formData = await request.formData();
+    console.log("[Verify API] FormData received");
     const text = formData.get("text") as string | null;
     const files = formData.getAll("files") as File[];
+    console.log("[Verify API] Files:", files.length, files.map(f => ({ name: f.name, type: f.type, size: f.size })));
 
     let inputType: "text" | "pdf" | "photo" | "mixed" | "xlsx" = "text";
     if (files.length > 0 && text) inputType = "mixed";
@@ -86,16 +92,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError || !verification) {
+      console.log("[Verify API] Create error:", createError);
       return NextResponse.json(
         { error: createError?.message || "Failed to create verification" },
         { status: 500 }
       );
     }
 
+    console.log("[Verify API] Verification created:", verification.id);
+
     // Use streaming to keep connection alive during processing
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        console.log("[Verify API] Stream started");
         // Send initial response
         controller.enqueue(encoder.encode(`data: {"status":"processing","id":"${verification.id}"}\n\n`));
 
@@ -105,6 +115,7 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`data: {"status":"processing"}\n\n`));
           }, 5000);
 
+          console.log("[Verify API] Calling processVerification...");
           await processVerification(
             verification.id,
             user.id,

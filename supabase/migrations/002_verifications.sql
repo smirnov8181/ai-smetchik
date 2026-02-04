@@ -34,6 +34,10 @@ create policy "Users can update own verifications"
   on public.verifications for update
   using (auth.uid() = user_id);
 
+create policy "Users can delete own verifications"
+  on public.verifications for delete
+  using (auth.uid() = user_id);
+
 -- ============================================
 -- VERIFICATION FILES
 -- ============================================
