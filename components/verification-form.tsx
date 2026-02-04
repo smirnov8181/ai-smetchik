@@ -24,8 +24,10 @@ export function VerificationForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[Form] handleSubmit called", { text: text.trim(), filesCount: files.length });
 
     if (!text.trim() && files.length === 0) {
+      console.log("[Form] Validation failed - no input");
       setError("Вставьте смету подрядчика или загрузите файл");
       return;
     }
