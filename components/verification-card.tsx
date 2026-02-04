@@ -49,7 +49,8 @@ export function VerificationCard({ verification }: VerificationCardProps) {
       console.log(`Delete response body: ${responseText}`);
 
       if (response.ok) {
-        router.refresh();
+        // Force page reload since router.refresh() doesn't always work
+        window.location.reload();
       } else {
         let errorMsg = "Не удалось удалить проверку";
         try {
