@@ -354,74 +354,107 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
 
   return (
     <div className="space-y-6">
-      {/* Main Summary Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      {/* Main Summary Card - Unified Price & Materials */}
+      <Card className="overflow-hidden border-0 shadow-lg">
+        {/* Header */}
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 pb-4">
+          <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-xl">Ваша смета готова</CardTitle>
-              <CardDescription className="mt-1">{humanSummary}</CardDescription>
+              <CardTitle className="text-2xl font-semibold tracking-tight">Смета готова</CardTitle>
+              <CardDescription className="mt-1.5 text-sm">{humanSummary}</CardDescription>
             </div>
-            <Badge variant={conf.variant} className="text-xs">
+            <Badge variant={conf.variant} className="text-xs px-2.5 py-1">
               {conf.shortLabel}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Quality tier selector */}
-          <div className="bg-muted/30 rounded-xl p-4">
-            <p className="text-sm font-medium text-center mb-3">Уровень материалов</p>
-            <div className="flex gap-2 justify-center">
-              {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => (
-                <button
-                  key={tier}
-                  onClick={() => setQualityTier(tier)}
-                  className={`
-                    px-4 py-2 rounded-lg text-sm font-medium transition-all
-                    ${qualityTier === tier
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-background hover:bg-muted border border-border"
-                    }
-                  `}
-                >
-                  <div>{qualityTiers[tier].label}</div>
-                  <div className={`text-xs ${qualityTier === tier ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                    {formatPrice(tierPrices[tier])} ₽
-                  </div>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-center text-muted-foreground mt-2">
-              {tierConfig.description}
-            </p>
-          </div>
 
-          {/* Main price block */}
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Ориентировочная стоимость ремонта</p>
-              <p className="text-4xl font-bold text-primary mb-1">
-                {formatPrice(finalTotal)} ₽
-                {totalDiff !== 0 && (
-                  <span className={`text-lg ml-2 ${totalDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
-                    {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)}
-                  </span>
-                )}
+        <CardContent className="p-6 pt-0 space-y-8">
+          {/* Unified Price Block with Materials Selector */}
+          <div className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700">
+
+            {/* Material Tier Toggle Group */}
+            <div className="mb-6">
+              <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mb-4 font-medium">
+                Уровень материалов
               </p>
-              <p className="text-muted-foreground">
+              <div className="flex justify-center gap-3">
+                {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => {
+                  const isSelected = qualityTier === tier;
+                  return (
+                    <button
+                      key={tier}
+                      onClick={() => setQualityTier(tier)}
+                      className={`
+                        relative flex-1 max-w-[140px] py-3 px-4 rounded-2xl transition-all duration-200
+                        ${isSelected
+                          ? "bg-white dark:bg-slate-800 shadow-lg ring-2 ring-primary/20 border border-primary/30"
+                          : "bg-slate-100/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-transparent"
+                        }
+                      `}
+                    >
+                      <div className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-slate-600 dark:text-slate-300"}`}>
+                        {qualityTiers[tier].label}
+                      </div>
+                      <div className={`text-xs mt-0.5 ${isSelected ? "text-primary/70" : "text-slate-400"}`}>
+                        {formatPrice(tierPrices[tier])} ₽
+                      </div>
+                      {isSelected && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white dark:border-slate-800" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-600 to-transparent mb-6" />
+
+            {/* Main Price Display */}
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-wider text-slate-400 mb-3">
+                Ориентировочная стоимость
+              </p>
+              <div className="flex items-baseline justify-center gap-2">
+                <span className="text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {formatPrice(finalTotal)}
+                </span>
+                <span className="text-2xl font-medium text-slate-400">₽</span>
+              </div>
+
+              {/* Diff indicator */}
+              {totalDiff !== 0 && (
+                <div className={`
+                  inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-sm font-medium
+                  ${totalDiff > 0
+                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
+                    : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                  }
+                `}>
+                  {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)} ₽
+                </div>
+              )}
+
+              {/* Price range */}
+              <p className="text-sm text-slate-400 mt-3">
                 от {formatPrice(minPrice)} до {formatPrice(maxPrice)} ₽
               </p>
+
               {activeScenarios.size > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-slate-400 mt-1">
                   с учётом {activeScenarios.size} {activeScenarios.size === 1 ? "изменения" : "изменений"}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Quality recommendation */}
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+          {/* Recommendation pill */}
+          <div className="flex items-start gap-3 bg-amber-50/80 dark:bg-amber-900/20 rounded-2xl p-4 border border-amber-100 dark:border-amber-800/50">
+            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center flex-shrink-0">
+              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
               {tierConfig.recommendation}
             </p>
           </div>
