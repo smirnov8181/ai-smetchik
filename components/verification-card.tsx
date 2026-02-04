@@ -85,7 +85,7 @@ export function VerificationCard({ verification }: VerificationCardProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               onClick={handleDelete}
               disabled={isDeleting}
             >
