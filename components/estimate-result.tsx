@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, AlertTriangle, Loader2, Info, TrendingUp, Share2, Check, Link, PieChart, Hammer, Package, Receipt } from "lucide-react";
+import { FileSpreadsheet, AlertTriangle, Loader2, Info, TrendingUp, Share2, Check, Link, PieChart, Lightbulb } from "lucide-react";
 
 interface EstimateResultProps {
   result: EstimateResultType;
@@ -58,6 +58,107 @@ const qualityTiers: Record<QualityTier, {
     recommendation: "Разница особенно заметна в плитке, сантехнике и напольных покрытиях.",
   },
 };
+
+// "What if" scenarios for decision simulation
+interface WhatIfScenario {
+  id: string;
+  label: string;
+  description: string;
+  condition: (sections: EstimateResultType["sections"]) => boolean;
+  impact: (sections: EstimateResultType["sections"]) => number; // negative = savings
+}
+
+const whatIfScenarios: WhatIfScenario[] = [
+  {
+    id: "shower-instead-of-bath",
+    label: "Душ вместо ванны",
+    description: "Душевая кабина дешевле и экономит место",
+    condition: (sections) => sections.some(s =>
+      s.items.some(i => i.work.toLowerCase().includes("ванн"))
+    ),
+    impact: () => -35000,
+  },
+  {
+    id: "no-heated-floor",
+    label: "Без тёплого пола",
+    description: "Убрать электрический тёплый пол",
+    condition: (sections) => sections.some(s =>
+      s.items.some(i => i.work.toLowerCase().includes("тёплый пол") || i.work.toLowerCase().includes("теплый пол"))
+    ),
+    impact: (sections) => {
+      const item = sections.flatMap(s => s.items).find(i =>
+        i.work.toLowerCase().includes("тёплый пол") || i.work.toLowerCase().includes("теплый пол")
+      );
+      return item ? -item.total : -25000;
+    },
+  },
+  {
+    id: "paint-instead-of-wallpaper",
+    label: "Покраска вместо обоев",
+    description: "Покраска дешевле и проще в уходе",
+    condition: (sections) => sections.some(s =>
+      s.items.some(i => i.work.toLowerCase().includes("обои") || i.work.toLowerCase().includes("обоев"))
+    ),
+    impact: () => -15000,
+  },
+  {
+    id: "laminate-instead-of-parquet",
+    label: "Ламинат вместо паркета",
+    description: "Качественный ламинат визуально не отличить",
+    condition: (sections) => sections.some(s =>
+      s.items.some(i => i.work.toLowerCase().includes("паркет"))
+    ),
+    impact: () => -40000,
+  },
+  {
+    id: "no-ceiling-multi",
+    label: "Простой потолок",
+    description: "Одноуровневый вместо многоуровневого",
+    condition: (sections) => sections.some(s =>
+      s.items.some(i => i.work.toLowerCase().includes("потолок") &&
+        (i.work.toLowerCase().includes("многоуров") || i.work.toLowerCase().includes("двухуров")))
+    ),
+    impact: () => -20000,
+  },
+  {
+    id: "less-demolition",
+    label: "Частичный демонтаж",
+    description: "Оставить часть старого покрытия где возможно",
+    condition: (sections) => sections.some(s =>
+      s.category.toLowerCase().includes("демонтаж") ||
+      s.items.some(i => i.work.toLowerCase().includes("демонтаж"))
+    ),
+    impact: (sections) => {
+      const demolitionSection = sections.find(s => s.category.toLowerCase().includes("демонтаж"));
+      return demolitionSection ? Math.round(-demolitionSection.subtotal * 0.3) : -10000;
+    },
+  },
+  {
+    id: "premium-tile",
+    label: "Плитка премиум-класса",
+    description: "Дизайнерская плитка для акцентных зон",
+    condition: (sections) => sections.some(s =>
+      s.items.some(i => i.work.toLowerCase().includes("плитк"))
+    ),
+    impact: (sections) => {
+      const tileItems = sections.flatMap(s => s.items).filter(i =>
+        i.work.toLowerCase().includes("плитк")
+      );
+      const tileMaterials = tileItems.reduce((sum, i) => sum + i.material_cost, 0);
+      return Math.round(tileMaterials * 0.8); // +80% на материалы
+    },
+  },
+  {
+    id: "premium-plumbing",
+    label: "Сантехника Grohe/Hansgrohe",
+    description: "Немецкие бренды вместо среднего сегмента",
+    condition: (sections) => sections.some(s =>
+      s.category.toLowerCase().includes("сантех") ||
+      s.items.some(i => i.work.toLowerCase().includes("смесител") || i.work.toLowerCase().includes("унитаз"))
+    ),
+    impact: () => 45000,
+  },
+];
 
 // Confidence levels with human-friendly explanations
 const confidenceConfig: Record<string, {
@@ -135,14 +236,38 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
   const [shareToken, setShareToken] = useState<string | null>(initialShareToken || null);
   const [copied, setCopied] = useState(false);
   const [qualityTier, setQualityTier] = useState<QualityTier>("standard");
+  const [activeScenarios, setActiveScenarios] = useState<Set<string>>(new Set());
 
-  // Recalculate prices based on quality tier
+  // Filter applicable "what if" scenarios
+  const applicableScenarios = whatIfScenarios.filter(s => s.condition(result.sections));
+
+  // Calculate total impact from active scenarios
+  const scenariosImpact = Array.from(activeScenarios).reduce((sum, id) => {
+    const scenario = whatIfScenarios.find(s => s.id === id);
+    return sum + (scenario ? scenario.impact(result.sections) : 0);
+  }, 0);
+
+  const toggleScenario = (id: string) => {
+    setActiveScenarios(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Recalculate prices based on quality tier + scenarios
   const tierConfig = qualityTiers[qualityTier];
   const adjustedMaterials = Math.round(result.subtotal_materials * tierConfig.multiplier);
   const materialsDiff = adjustedMaterials - result.subtotal_materials;
-  const adjustedTotal = result.subtotal_labor + adjustedMaterials + result.overhead;
-  const adjustedOverhead = Math.round(adjustedTotal * 0.1); // Recalc overhead
-  const finalTotal = result.subtotal_labor + adjustedMaterials + adjustedOverhead;
+  const baseTotal = result.subtotal_labor + adjustedMaterials + result.overhead;
+  const adjustedOverhead = Math.round(baseTotal * 0.1);
+  const totalBeforeScenarios = result.subtotal_labor + adjustedMaterials + adjustedOverhead;
+  const finalTotal = totalBeforeScenarios + scenariosImpact;
+  const totalDiff = finalTotal - result.total; // Total diff from original
 
   const handleShare = async () => {
     if (shareToken) {
@@ -277,15 +402,20 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
               <p className="text-sm text-muted-foreground mb-2">Ориентировочная стоимость ремонта</p>
               <p className="text-4xl font-bold text-primary mb-1">
                 {formatPrice(finalTotal)} ₽
-                {qualityTier !== "standard" && (
-                  <span className={`text-lg ml-2 ${materialsDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
-                    {materialsDiff > 0 ? "+" : ""}{formatPrice(materialsDiff)}
+                {totalDiff !== 0 && (
+                  <span className={`text-lg ml-2 ${totalDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
+                    {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)}
                   </span>
                 )}
               </p>
               <p className="text-muted-foreground">
                 от {formatPrice(minPrice)} до {formatPrice(maxPrice)} ₽
               </p>
+              {activeScenarios.size > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  с учётом {activeScenarios.size} {activeScenarios.size === 1 ? "изменения" : "изменений"}
+                </p>
+              )}
             </div>
           </div>
 
@@ -295,6 +425,75 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
               {tierConfig.recommendation}
             </p>
           </div>
+
+          {/* What if scenarios - decision simulator */}
+          {applicableScenarios.length > 0 && (
+            <div className="border rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="h-4 w-4 text-primary" />
+                <p className="font-medium text-sm">А что если...</p>
+              </div>
+              <div className="space-y-2">
+                {applicableScenarios.map((scenario) => {
+                  const impact = scenario.impact(result.sections);
+                  const isActive = activeScenarios.has(scenario.id);
+                  const isSaving = impact < 0;
+
+                  return (
+                    <button
+                      key={scenario.id}
+                      onClick={() => toggleScenario(scenario.id)}
+                      className={`
+                        w-full text-left p-3 rounded-lg border transition-all
+                        ${isActive
+                          ? isSaving
+                            ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
+                            : "bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700"
+                          : "hover:bg-muted/50 border-border"
+                        }
+                      `}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`
+                            w-5 h-5 rounded border-2 flex items-center justify-center
+                            ${isActive
+                              ? isSaving
+                                ? "bg-green-500 border-green-500 text-white"
+                                : "bg-purple-500 border-purple-500 text-white"
+                              : "border-muted-foreground/30"
+                            }
+                          `}>
+                            {isActive && <Check className="h-3 w-3" />}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{scenario.label}</p>
+                            <p className="text-xs text-muted-foreground">{scenario.description}</p>
+                          </div>
+                        </div>
+                        <span className={`
+                          font-semibold text-sm whitespace-nowrap
+                          ${isSaving ? "text-green-600" : "text-purple-600"}
+                        `}>
+                          {isSaving ? "" : "+"}{formatPrice(impact)} ₽
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {activeScenarios.size > 0 && (
+                <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Выбрано изменений: {activeScenarios.size}
+                  </span>
+                  <span className={`font-semibold ${scenariosImpact < 0 ? "text-green-600" : "text-purple-600"}`}>
+                    {scenariosImpact < 0 ? "" : "+"}{formatPrice(scenariosImpact)} ₽
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Price structure - visual breakdown */}
           <div>
