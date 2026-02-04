@@ -459,75 +459,6 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
             </p>
           </div>
 
-          {/* What if scenarios - decision simulator */}
-          {applicableScenarios.length > 0 && (
-            <div className="border rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Lightbulb className="h-4 w-4 text-primary" />
-                <p className="font-medium text-sm">А что если...</p>
-              </div>
-              <div className="space-y-2">
-                {applicableScenarios.map((scenario) => {
-                  const impact = scenario.impact(result.sections);
-                  const isActive = activeScenarios.has(scenario.id);
-                  const isSaving = impact < 0;
-
-                  return (
-                    <button
-                      key={scenario.id}
-                      onClick={() => toggleScenario(scenario.id)}
-                      className={`
-                        w-full text-left p-3 rounded-lg border transition-all
-                        ${isActive
-                          ? isSaving
-                            ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
-                            : "bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700"
-                          : "hover:bg-muted/50 border-border"
-                        }
-                      `}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`
-                            w-5 h-5 rounded border-2 flex items-center justify-center
-                            ${isActive
-                              ? isSaving
-                                ? "bg-green-500 border-green-500 text-white"
-                                : "bg-purple-500 border-purple-500 text-white"
-                              : "border-muted-foreground/30"
-                            }
-                          `}>
-                            {isActive && <Check className="h-3 w-3" />}
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{scenario.label}</p>
-                            <p className="text-xs text-muted-foreground">{scenario.description}</p>
-                          </div>
-                        </div>
-                        <span className={`
-                          font-semibold text-sm whitespace-nowrap
-                          ${isSaving ? "text-green-600" : "text-purple-600"}
-                        `}>
-                          {isSaving ? "" : "+"}{formatPrice(impact)} ₽
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {activeScenarios.size > 0 && (
-                <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Выбрано изменений: {activeScenarios.size}
-                  </span>
-                  <span className={`font-semibold ${scenariosImpact < 0 ? "text-green-600" : "text-purple-600"}`}>
-                    {scenariosImpact < 0 ? "" : "+"}{formatPrice(scenariosImpact)} ₽
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Price structure - visual breakdown */}
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -666,6 +597,109 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
           <EstimateTable sections={result.sections} />
         </CardContent>
       </Card>
+
+      {/* Summary Total - so user doesn't need to scroll up */}
+      <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+        <CardContent className="py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Итого по смете</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {qualityTiers[qualityTier].label} • {result.sections.reduce((sum, s) => sum + s.items.length, 0)} позиций
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{formatPrice(finalTotal)}</span>
+                <span className="text-lg text-muted-foreground">₽</span>
+              </div>
+              {totalDiff !== 0 && (
+                <span className={`text-sm font-medium ${totalDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
+                  {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)} ₽ от базовой
+                </span>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* What if scenarios - decision simulator */}
+      {applicableScenarios.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Lightbulb className="h-5 w-5 text-primary" />
+              А что если...
+            </CardTitle>
+            <CardDescription>
+              Посмотрите, как изменится стоимость при других решениях
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {applicableScenarios.map((scenario) => {
+              const impact = scenario.impact(result.sections);
+              const isActive = activeScenarios.has(scenario.id);
+              const isSaving = impact < 0;
+
+              return (
+                <button
+                  key={scenario.id}
+                  onClick={() => toggleScenario(scenario.id)}
+                  className={`
+                    w-full text-left p-4 rounded-xl border transition-all
+                    ${isActive
+                      ? isSaving
+                        ? "bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700"
+                        : "bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700"
+                      : "hover:bg-muted/50 border-border"
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`
+                        w-6 h-6 rounded-lg border-2 flex items-center justify-center
+                        ${isActive
+                          ? isSaving
+                            ? "bg-green-500 border-green-500 text-white"
+                            : "bg-purple-500 border-purple-500 text-white"
+                          : "border-muted-foreground/30"
+                        }
+                      `}>
+                        {isActive && <Check className="h-4 w-4" />}
+                      </div>
+                      <div>
+                        <p className="font-medium">{scenario.label}</p>
+                        <p className="text-sm text-muted-foreground">{scenario.description}</p>
+                      </div>
+                    </div>
+                    <span className={`
+                      font-bold text-lg whitespace-nowrap
+                      ${isSaving ? "text-green-600" : "text-purple-600"}
+                    `}>
+                      {isSaving ? "" : "+"}{formatPrice(impact)} ₽
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+
+            {activeScenarios.size > 0 && (
+              <div className="mt-4 pt-4 border-t flex items-center justify-between bg-muted/30 rounded-xl p-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Итого по выбранным изменениям:</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Цена вверху обновляется автоматически
+                  </p>
+                </div>
+                <span className={`font-bold text-xl ${scenariosImpact < 0 ? "text-green-600" : "text-purple-600"}`}>
+                  {scenariosImpact < 0 ? "" : "+"}{formatPrice(scenariosImpact)} ₽
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
