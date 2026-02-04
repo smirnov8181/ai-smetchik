@@ -8,16 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, ShieldCheck } from "lucide-react";
 import { EstimateCard } from "@/components/estimate-card";
-
-const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  draft: { label: "Черновик", variant: "outline" },
-  processing: { label: "Обработка...", variant: "secondary" },
-  ready: { label: "Готово", variant: "default" },
-  error: { label: "Ошибка", variant: "destructive" },
-};
+import { VerificationCard } from "@/components/verification-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -134,40 +127,9 @@ export default async function DashboardPage() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {verifications.map((v) => {
-              const status = statusLabels[v.status] || statusLabels.draft;
-              return (
-                <Link key={v.id} href={`/dashboard/verify/${v.id}`}>
-                  <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium flex items-center gap-2">
-                          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                          Проверка от{" "}
-                          {new Date(v.created_at).toLocaleDateString("ru-RU")}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {v.total_contractor
-                            ? `Смета: ${Number(v.total_contractor).toLocaleString("ru-RU")} руб.`
-                            : "Обработка..."}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4 ml-4">
-                        {v.overpay_percent != null && Number(v.overpay_percent) > 0 && (
-                          <span className="font-semibold text-red-600 whitespace-nowrap">
-                            +{Number(v.overpay_percent).toFixed(0)}% переплата
-                          </span>
-                        )}
-                        {v.is_paid && (
-                          <Badge variant="outline">Оплачено</Badge>
-                        )}
-                        <Badge variant={status.variant}>{status.label}</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
+            {verifications.map((v) => (
+              <VerificationCard key={v.id} verification={v} />
+            ))}
           </div>
         )}
       </div>
