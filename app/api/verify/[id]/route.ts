@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 // GET /api/verify/:id
 export async function GET(
@@ -70,9 +70,12 @@ export async function DELETE(
     return NextResponse.json({ error: "Verification not found" }, { status: 404 });
   }
 
+  // Use service client for deletion (bypasses RLS)
+  const serviceClient = createServiceClient();
+
   // Try to delete files from storage (ignore errors - files might not exist)
   try {
-    const { data: files } = await supabase
+    const { data: files } = await serviceClient
       .from("verification_files")
       .select("file_url")
       .eq("verification_id", id);
@@ -91,7 +94,7 @@ export async function DELETE(
 
       if (filePaths.length > 0) {
         console.log(`[DELETE verification] Removing files:`, filePaths);
-        await supabase.storage.from("estimate-files").remove(filePaths);
+        await serviceClient.storage.from("estimate-files").remove(filePaths);
       }
     }
   } catch (fileError) {
@@ -100,7 +103,7 @@ export async function DELETE(
 
   // Delete verification_files first (in case no CASCADE)
   console.log(`[DELETE verification] Deleting verification_files records`);
-  const { error: filesDeleteError } = await supabase
+  const { error: filesDeleteError } = await serviceClient
     .from("verification_files")
     .delete()
     .eq("verification_id", id);
@@ -112,11 +115,10 @@ export async function DELETE(
 
   // Delete verification
   console.log(`[DELETE verification] Deleting verification record`);
-  const { error } = await supabase
+  const { error } = await serviceClient
     .from("verifications")
     .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
+    .eq("id", id);
 
   if (error) {
     console.log(`[DELETE verification] Delete error:`, error.message);

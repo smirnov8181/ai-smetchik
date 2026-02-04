@@ -39,18 +39,30 @@ export function VerificationCard({ verification }: VerificationCardProps) {
 
     setIsDeleting(true);
     try {
+      console.log(`Deleting verification ${verification.id}`);
       const response = await fetch(`/api/verify/${verification.id}`, {
         method: "DELETE",
       });
 
+      console.log(`Delete response status: ${response.status}`);
+      const responseText = await response.text();
+      console.log(`Delete response body: ${responseText}`);
+
       if (response.ok) {
         router.refresh();
       } else {
-        const data = await response.json();
-        alert(data.error || "Не удалось удалить проверку");
+        let errorMsg = "Не удалось удалить проверку";
+        try {
+          const data = JSON.parse(responseText);
+          errorMsg = data.error || errorMsg;
+        } catch {
+          errorMsg = responseText || errorMsg;
+        }
+        alert(`Ошибка: ${errorMsg} (status: ${response.status})`);
       }
-    } catch {
-      alert("Ошибка при удалении");
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert(`Ошибка при удалении: ${err instanceof Error ? err.message : "Unknown"}`);
     } finally {
       setIsDeleting(false);
     }
