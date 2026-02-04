@@ -105,12 +105,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process in background (same pattern as verify route)
-    processEstimate(estimate.id, user.id, text, files, serviceClient).catch(
-      (err) => console.error("Estimate pipeline error:", err)
-    );
-
-    return NextResponse.json({ estimate: { id: estimate.id, status: "processing" } });
+    // Process synchronously (Vercel kills background tasks after response)
+    try {
+      await processEstimate(estimate.id, user.id, text, files, serviceClient);
+      return NextResponse.json({ estimate: { id: estimate.id, status: "ready" } });
+    } catch (err) {
+      console.error("Estimate pipeline error:", err);
+      return NextResponse.json({ estimate: { id: estimate.id, status: "error" } });
+    }
   } catch (error) {
     console.error("Create estimate error:", error);
     return NextResponse.json(

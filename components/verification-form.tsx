@@ -125,7 +125,7 @@ export function VerificationForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Анализируем смету...
+                AI анализирует... (30-60 сек)
               </>
             ) : (
               <>

@@ -92,17 +92,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    processVerification(
-      verification.id,
-      user.id,
-      text,
-      files,
-      serviceClient
-    ).catch((err) => console.error("Verification pipeline error:", err));
-
-    return NextResponse.json({
-      verification: { id: verification.id, status: "processing" },
-    });
+    // Process synchronously (Vercel kills background tasks after response)
+    try {
+      await processVerification(
+        verification.id,
+        user.id,
+        text,
+        files,
+        serviceClient
+      );
+      return NextResponse.json({
+        verification: { id: verification.id, status: "ready" },
+      });
+    } catch (err) {
+      console.error("Verification pipeline error:", err);
+      return NextResponse.json({
+        verification: { id: verification.id, status: "error" },
+      });
+    }
   } catch (error) {
     console.error("Create verification error:", error);
     return NextResponse.json(

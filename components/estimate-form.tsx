@@ -110,7 +110,7 @@ export function EstimateForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Создаём смету...
+                AI анализирует... (30-60 сек)
               </>
             ) : (
               "Рассчитать смету"
