@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Upload, X, FileText, Image, FileSpreadsheet } from "lucide-react";
+import { Upload, X, FileText, Image, FileSpreadsheet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileUploadProps {
@@ -10,12 +10,77 @@ interface FileUploadProps {
   maxFiles?: number;
 }
 
+// Compress image to max 1MB / 1920px
+async function compressImage(file: File): Promise<File> {
+  // Skip non-images
+  if (!file.type.startsWith("image/")) return file;
+
+  // Skip small images (< 500KB)
+  if (file.size < 500 * 1024) return file;
+
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+
+      // Max dimension 1920px
+      const maxDim = 1920;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = (height / width) * maxDim;
+          width = maxDim;
+        } else {
+          width = (width / height) * maxDim;
+          height = maxDim;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+            console.log(`Compressed ${file.name}: ${(file.size/1024).toFixed(0)}KB -> ${(compressedFile.size/1024).toFixed(0)}KB`);
+            resolve(compressedFile);
+          } else {
+            resolve(file);
+          }
+        },
+        "image/jpeg",
+        0.8 // 80% quality
+      );
+    };
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export function FileUpload({
   files,
   onFilesChange,
   maxFiles = 10,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const processFiles = useCallback(async (newFiles: File[]) => {
+    setIsCompressing(true);
+    try {
+      const processed = await Promise.all(newFiles.map(compressImage));
+      onFilesChange([...files, ...processed].slice(0, maxFiles));
+    } finally {
+      setIsCompressing(false);
+    }
+  }, [files, onFilesChange, maxFiles]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -41,21 +106,19 @@ export function FileUpload({
           f.name.endsWith(".xlsx")
       );
 
-      const newFiles = [...files, ...droppedFiles].slice(0, maxFiles);
-      onFilesChange(newFiles);
+      processFiles(droppedFiles);
     },
-    [files, onFilesChange, maxFiles]
+    [processFiles]
   );
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
         const selected = Array.from(e.target.files);
-        const newFiles = [...files, ...selected].slice(0, maxFiles);
-        onFilesChange(newFiles);
+        processFiles(selected);
       }
     },
-    [files, onFilesChange, maxFiles]
+    [processFiles]
   );
 
   const removeFile = useCallback(
@@ -79,25 +142,36 @@ export function FileUpload({
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-        <p className="text-sm text-muted-foreground mb-2">
-          Перетащите файлы сюда или нажмите для выбора
-        </p>
-        <p className="text-xs text-muted-foreground mb-4">
-          PDF, JPG, PNG, XLSX (макс. {maxFiles} файлов)
-        </p>
-        <label>
-          <Button variant="outline" size="sm" asChild>
-            <span>Выбрать файлы</span>
-          </Button>
-          <input
-            type="file"
-            className="hidden"
-            multiple
-            accept="image/*,.pdf,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            onChange={handleFileSelect}
-          />
-        </label>
+        {isCompressing ? (
+          <>
+            <Loader2 className="mx-auto h-10 w-10 text-muted-foreground mb-3 animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              Сжимаем изображения...
+            </p>
+          </>
+        ) : (
+          <>
+            <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground mb-2">
+              Перетащите файлы сюда или нажмите для выбора
+            </p>
+            <p className="text-xs text-muted-foreground mb-4">
+              PDF, JPG, PNG, XLSX (макс. {maxFiles} файлов)
+            </p>
+            <label>
+              <Button variant="outline" size="sm" asChild>
+                <span>Выбрать файлы</span>
+              </Button>
+              <input
+                type="file"
+                className="hidden"
+                multiple
+                accept="image/*,.pdf,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={handleFileSelect}
+              />
+            </label>
+          </>
+        )}
       </div>
 
       {files.length > 0 && (
