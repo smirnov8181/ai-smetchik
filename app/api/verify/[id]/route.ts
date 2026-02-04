@@ -98,8 +98,20 @@ export async function DELETE(
     console.log(`[DELETE verification] File cleanup error (ignored):`, fileError);
   }
 
+  // Delete verification_files first (in case no CASCADE)
+  console.log(`[DELETE verification] Deleting verification_files records`);
+  const { error: filesDeleteError } = await supabase
+    .from("verification_files")
+    .delete()
+    .eq("verification_id", id);
+
+  if (filesDeleteError) {
+    console.log(`[DELETE verification] Files delete error:`, filesDeleteError.message);
+    // Continue anyway - table might not exist or have no records
+  }
+
   // Delete verification
-  console.log(`[DELETE verification] Deleting record`);
+  console.log(`[DELETE verification] Deleting verification record`);
   const { error } = await supabase
     .from("verifications")
     .delete()

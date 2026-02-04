@@ -42,25 +42,39 @@ export function VerificationForm() {
         formData.append("files", file);
       }
 
-      const response = await fetch("/api/verify", {
-        method: "POST",
-        body: formData,
-      });
+      // Add timeout for long requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 sec timeout
 
-      const responseText = await response.text();
-      let data;
       try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch {
-        console.error("Failed to parse response:", responseText);
-        throw new Error("Ошибка сервера. Попробуйте позже.");
-      }
+        const response = await fetch("/api/verify", {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create verification");
-      }
+        const responseText = await response.text();
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          console.error("Failed to parse response:", responseText);
+          throw new Error("Ошибка сервера. Попробуйте позже.");
+        }
 
-      router.push(`/dashboard/verify/${data.verification.id}`);
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to create verification");
+        }
+
+        router.push(`/dashboard/verify/${data.verification.id}`);
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        if (fetchErr instanceof Error && fetchErr.name === 'AbortError') {
+          throw new Error("Превышено время ожидания. Попробуйте файл меньшего размера или текст.");
+        }
+        throw fetchErr;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
