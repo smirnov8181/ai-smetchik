@@ -42,7 +42,7 @@ export async function parseContractorEstimate(params: {
     for (const url of imageUrls) {
       userParts.push({
         type: "image_url",
-        image_url: { url, detail: "high" },
+        image_url: { url, detail: "auto" },
       });
     }
   }
@@ -51,8 +51,11 @@ export async function parseContractorEstimate(params: {
     throw new Error("No input provided");
   }
 
+  // Use faster model for image parsing to avoid timeout
+  const modelToUse = imageUrls && imageUrls.length > 0 ? MODELS.fast : MODELS.main;
+
   const response = await ai.chat.completions.create({
-    model: MODELS.main,
+    model: modelToUse,
     messages: [
       { role: "system", content: VERIFICATION_PARSER_PROMPT },
       { role: "user", content: userParts },
