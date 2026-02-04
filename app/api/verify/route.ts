@@ -148,12 +148,19 @@ async function processVerification(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any
 ) {
+  const log = (msg: string, data?: unknown) => {
+    console.log(`[Verify ${verificationId.slice(0,8)}] ${msg}`, data || "");
+  };
+
   try {
+    log("START", { filesCount: files.length, hasText: !!text });
+
     let pdfText = "";
     const imageUrls: string[] = [];
     let xlsxParsedItems: Awaited<ReturnType<typeof parseContractorXlsx>> | null = null;
 
     for (const file of files) {
+      log(`Processing file: ${file.name}`, { type: file.type, size: file.size });
       const buffer = Buffer.from(await file.arrayBuffer());
       const fileName = `${userId}/${verificationId}/${file.name}`;
 
@@ -199,19 +206,28 @@ async function processVerification(
     }
 
     // Step 1: Parse contractor estimate
+    log("Step 1: Parsing", { hasXlsx: !!xlsxParsedItems, imageCount: imageUrls.length, pdfTextLen: pdfText.length });
+
     let contractorItems;
 
     if (xlsxParsedItems && xlsxParsedItems.items.length > 0) {
       // Use directly parsed xlsx data (no AI needed)
       contractorItems = xlsxParsedItems.items;
+      log("Using XLSX parsed items", { count: contractorItems.length });
     } else {
       // Use AI to parse PDF/photo/text
+      log("Calling AI parseContractorEstimate...");
       const { items } = await parseContractorEstimate({
         text: text || undefined,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         pdfText: pdfText || undefined,
       });
       contractorItems = items;
+      log("AI returned items", { count: contractorItems.length, items: contractorItems.slice(0, 3) });
+    }
+
+    if (!contractorItems || contractorItems.length === 0) {
+      throw new Error("AI не смог распознать позиции сметы. Попробуйте более чёткое фото или текст.");
     }
 
     await supabase
@@ -220,10 +236,14 @@ async function processVerification(
       .eq("id", verificationId);
 
     // Step 2: Compare with market prices
+    log("Step 2: Verifying prices...");
     const verifiedItems = await verifyPrices(contractorItems);
+    log("Step 2 complete", { verifiedCount: verifiedItems.length });
 
     // Step 3: Generate result
+    log("Step 3: Generating result...");
     const result = await generateVerificationResult(verifiedItems);
+    log("Step 3 complete", { total: result.total_contractor, overpay: result.overpay_percent });
 
     await supabase
       .from("verifications")
@@ -236,7 +256,10 @@ async function processVerification(
         overpay_percent: result.overpay_percent,
       })
       .eq("id", verificationId);
+
+    log("SUCCESS", { total: result.total_contractor });
   } catch (error) {
+    console.error(`[Verify] ERROR:`, error);
     console.error("Verification pipeline error:", error);
     await supabase
       .from("verifications")
