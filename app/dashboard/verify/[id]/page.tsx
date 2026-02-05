@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { VerificationResult } from "@/components/verification-result";
+import { ParsedItemsTable } from "@/components/parsed-items-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { ArrowLeft, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 import type {
   Verification,
   VerificationResult as VerificationResultType,
+  ContractorWorkItem,
 } from "@/lib/supabase/types";
 
 export default function VerificationDetailPage() {
@@ -123,23 +125,38 @@ export default function VerificationDetailPage() {
       </div>
 
       {verification.status === "processing" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Анализируем смету подрядчика
-            </CardTitle>
-            <CardDescription>
-              AI распознаёт позиции, извлекает цены и сравнивает с рыночными
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Progress value={50} className="mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Сравнение с базой рыночных цен...
-            </p>
-          </CardContent>
-        </Card>
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Анализируем смету подрядчика
+              </CardTitle>
+              <CardDescription>
+                {verification.parsed_items
+                  ? "Сравниваем цены с рыночными..."
+                  : "AI распознаёт позиции и извлекает цены..."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Progress
+                value={verification.parsed_items ? 70 : 30}
+                className="mb-2"
+              />
+              <p className="text-sm text-muted-foreground">
+                {verification.parsed_items
+                  ? `Распознано ${(verification.parsed_items as ContractorWorkItem[]).length} позиций, сравниваем с рынком...`
+                  : "Распознаём текст и позиции сметы..."}
+              </p>
+            </CardContent>
+          </Card>
+
+          {verification.parsed_items && (
+            <ParsedItemsTable
+              items={verification.parsed_items as ContractorWorkItem[]}
+            />
+          )}
+        </>
       )}
 
       {verification.status === "error" && (
