@@ -12,6 +12,7 @@ import * as fs from "fs";
 
 const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
 const FIRECRAWL_URL = "https://api.firecrawl.dev/v1/scrape";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 // HomeAdvisor cost guide URLs
 const HOMEADVISOR_PAGES = [
@@ -134,7 +135,18 @@ async function scrapeAllPrices(): Promise<ScrapedPrice[]> {
 
     try {
       const markdown = await scrapeWithFirecrawl(page.url);
-      const prices = extractPrices(markdown);
+
+      // Try regex first
+      let prices = extractPrices(markdown);
+
+      // If regex failed, use AI
+      if (!prices.min || !prices.max) {
+        console.log(`  Regex failed, trying AI...`);
+        const aiPrices = await extractWithAI(markdown, page.work);
+        if (aiPrices) {
+          prices = aiPrices;
+        }
+      }
 
       results.push({
         category: page.category,
@@ -144,14 +156,14 @@ async function scrapeAllPrices(): Promise<ScrapedPrice[]> {
         price_avg: prices.avg,
         price_max: prices.max,
         unit: prices.unit,
-        raw_text: markdown.slice(0, 1000), // First 1000 chars for debugging
+        raw_text: markdown.slice(0, 1000),
         scraped_at: new Date().toISOString(),
       });
 
       console.log(`  ✓ ${page.work}: $${prices.min} - $${prices.max} ${prices.unit || ""}`);
 
-      // Rate limit: 1 request per second
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Rate limit
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
     } catch (error) {
       console.error(`  ✗ Failed: ${error}`);
@@ -174,19 +186,63 @@ async function scrapeAllPrices(): Promise<ScrapedPrice[]> {
 
 // Use AI to extract structured data (better accuracy)
 async function extractWithAI(markdown: string, workName: string): Promise<{ min: number; avg: number; max: number; unit: string } | null> {
-  // This would call OpenAI/Claude to extract prices
-  // More accurate than regex but costs money
+  if (!OPENROUTER_API_KEY) {
+    console.log("  No OPENROUTER_API_KEY, using regex only");
+    return null;
+  }
 
-  const prompt = `
-Extract the price range for "${workName}" from this text.
-Return JSON: { "min": number, "avg": number, "max": number, "unit": "sq ft" | "linear ft" | "project" | "unit" }
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "Extract price information from home improvement cost guides. Return only valid JSON."
+          },
+          {
+            role: "user",
+            content: `Extract the typical price range for "${workName}" from this text.
+
+Return JSON format: {"min": number, "max": number, "unit": "sq ft" | "linear ft" | "project" | "unit"}
+
+- min/max should be the main price range mentioned (national average)
+- unit should be the pricing unit (per sq ft, per project, etc.)
+- If prices are per square foot, use those numbers directly
+- If it's a total project cost, use "project" as unit
 
 Text:
-${markdown.slice(0, 2000)}
-`;
+${markdown.slice(0, 3000)}`
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 200,
+      }),
+    });
 
-  // TODO: Implement AI extraction
-  console.log("AI extraction not implemented yet");
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+
+    // Parse JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        min: parsed.min || 0,
+        max: parsed.max || 0,
+        avg: Math.round((parsed.min + parsed.max) / 2),
+        unit: parsed.unit || "project",
+      };
+    }
+  } catch (error) {
+    console.log(`  AI extraction failed: ${error}`);
+  }
+
   return null;
 }
 

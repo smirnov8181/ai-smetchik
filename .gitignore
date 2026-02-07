@@ -40,3 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 Examples/
+scripts/scraped-prices.json
+supabase/.temp/
