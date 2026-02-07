@@ -95,19 +95,19 @@ export function USLanding() {
               {!loading && (
                 user ? (
                   <Link href="/dashboard">
-                    <button className="bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
+                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
                       Dashboard
                     </button>
                   </Link>
                 ) : (
                   <>
                     <Link href="/login" className="hidden sm:block">
-                      <button className="text-[#161616]/70 hover:text-[#161616] font-medium px-4 py-2 transition-colors">
+                      <button className="cursor-pointer text-[#161616]/70 hover:text-[#161616] font-medium px-4 py-2 transition-colors">
                         Log in
                       </button>
                     </Link>
                     <Link href="/register">
-                      <button className="bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
+                      <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
                         Get Results
                       </button>
                     </Link>
@@ -144,13 +144,13 @@ export function USLanding() {
 
               <div className="flex flex-wrap gap-4 mb-8">
                 <Link href="/register">
-                  <button className="group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
+                  <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
                     Check My Estimate — $39.99
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="bg-[#FA5424] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all">
+                  <button className="cursor-pointer bg-[#FA5424] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all">
                     See Demo
                   </button>
                 </Link>
@@ -360,7 +360,7 @@ export function USLanding() {
             </div>
 
             <Link href="/register">
-              <button className="group bg-[#0D8DFF] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
+              <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
                 Check My Estimate
                 <ArrowUpRight className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </button>
@@ -384,7 +384,7 @@ export function USLanding() {
             Your contractor is asking for thousands. Isn't it worth $39.99 to be sure?
           </p>
           <Link href="/register">
-            <button className="group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
+            <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
               Get Started Now
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
