@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRegion } from "@/lib/i18n/region-context";
-import { RegionSwitcher } from "@/components/region-switcher";
+import { LandingRegionSwitcher } from "@/components/landing-region-switcher";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -217,7 +217,7 @@ export function LandingContent() {
             <span className="font-bold text-xl">{t.appName}</span>
           </div>
           <div className="flex items-center gap-4">
-            <RegionSwitcher />
+            <LandingRegionSwitcher />
             {!loading && (
               user ? (
                 <Link href="/dashboard">

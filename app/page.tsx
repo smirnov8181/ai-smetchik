@@ -1,15 +1,15 @@
-"use client";
-
-import { useRegion } from "@/lib/i18n/region-context";
 import { LandingContent } from "@/components/landing-content";
-import { USLanding } from "@/components/us-landing";
 
-export default function LandingPage() {
-  const { region } = useRegion();
+export const metadata = {
+  title: "AI Сметчик — Смета на ремонт за 2 минуты",
+  description: "Загрузите описание, фото или PDF — AI проанализирует и составит детальную смету с ценами на все работы и материалы",
+  openGraph: {
+    title: "AI Сметчик — Смета на ремонт за 2 минуты",
+    description: "AI составит детальную смету с ценами на все работы и материалы",
+    locale: "ru_RU",
+  },
+};
 
-  if (region === "US") {
-    return <USLanding />;
-  }
-
+export default function RUPage() {
   return <LandingContent />;
 }

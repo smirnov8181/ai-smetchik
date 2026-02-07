@@ -19,7 +19,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { RegionSwitcher } from "@/components/region-switcher";
+import { LandingRegionSwitcher } from "@/components/landing-region-switcher";
 import type { User } from "@supabase/supabase-js";
 
 const testimonials = [
@@ -93,7 +93,7 @@ export function USLanding() {
               <span className="font-bold text-xl tracking-tight">ContractorCheck</span>
             </div>
             <div className="flex items-center gap-3">
-              <RegionSwitcher />
+              <LandingRegionSwitcher />
               {!loading && (
                 user ? (
                   <Link href="/dashboard">
