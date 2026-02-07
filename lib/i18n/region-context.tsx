@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Region, translations } from "./translations";
 
-type Translations = typeof translations.RU | typeof translations.US;
+type Translations = (typeof translations)[Region];
 
 interface RegionContextType {
   region: Region;
