@@ -3,10 +3,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Region, translations } from "./translations";
 
+type Translations = typeof translations.RU | typeof translations.US;
+
 interface RegionContextType {
   region: Region;
   setRegion: (region: Region) => void;
-  t: typeof translations.RU;
+  t: Translations;
   formatPrice: (amount: number) => string;
   currency: string;
   currencySymbol: string;
