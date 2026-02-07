@@ -35,12 +35,21 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    // Handle RU dashboard auth
     if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
 
+    // Handle US dashboard auth
+    if (!user && request.nextUrl.pathname.startsWith("/us/dashboard")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/us/login";
+      return NextResponse.redirect(url);
+    }
+
+    // Redirect logged-in users from RU login/register to dashboard
     if (
       user &&
       (request.nextUrl.pathname === "/login" ||
@@ -48,6 +57,17 @@ export async function middleware(request: NextRequest) {
     ) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    // Redirect logged-in users from US login/register to US dashboard
+    if (
+      user &&
+      (request.nextUrl.pathname === "/us/login" ||
+        request.nextUrl.pathname === "/us/register")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/us/dashboard";
       return NextResponse.redirect(url);
     }
   } catch {
@@ -59,5 +79,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: [
+    "/dashboard/:path*",
+    "/login",
+    "/register",
+    "/us/dashboard/:path*",
+    "/us/login",
+    "/us/register",
+  ],
 };
