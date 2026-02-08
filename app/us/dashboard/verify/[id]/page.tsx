@@ -313,30 +313,99 @@ export default function USVerificationDetailPage() {
               </div>
             </div>
           ) : (
-            /* Paywall */
-            <div className="bg-[#161616] rounded-3xl p-8 text-center relative overflow-hidden">
-              <div className="absolute inset-0 opacity-5">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#0D8DFF] to-[#33C791]" />
-              </div>
-              <div className="relative">
-                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Lock className="w-8 h-8 text-white" />
+            /* Preview + Paywall */
+            <>
+              {/* Preview Table */}
+              {result.items && result.items.length > 0 && (
+                <div className="bg-white rounded-3xl p-6 border border-[#161616]/5 relative overflow-hidden">
+                  <h3 className="text-lg font-bold text-[#161616] mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Line-by-Line Analysis Preview
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-[#161616]/10">
+                          <th className="text-left py-3 px-2 text-sm font-medium text-[#161616]/50">Item</th>
+                          <th className="text-right py-3 px-2 text-sm font-medium text-[#161616]/50">Quoted</th>
+                          <th className="text-right py-3 px-2 text-sm font-medium text-[#161616]/50">Fair Price</th>
+                          <th className="text-right py-3 px-2 text-sm font-medium text-[#161616]/50">Difference</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {result.items.slice(0, 2).map((item, index) => {
+                          const diff = Number(item.contractor_total) - Number(item.market_avg * item.quantity);
+                          const isOverpriced = diff > 0;
+
+                          return (
+                            <tr key={index} className="border-b border-[#161616]/5">
+                              <td className="py-3 px-2 text-[#161616]">{item.work}</td>
+                              <td className="py-3 px-2 text-right text-[#161616] font-medium">
+                                ${Number(item.contractor_total).toLocaleString("en-US")}
+                              </td>
+                              <td className="py-3 px-2 text-right text-[#33C791] font-medium">
+                                ${Number(item.market_avg * item.quantity).toLocaleString("en-US")}
+                              </td>
+                              <td className={`py-3 px-2 text-right font-semibold ${isOverpriced ? "text-[#FA5424]" : "text-[#33C791]"}`}>
+                                {isOverpriced ? "+" : ""}${diff.toLocaleString("en-US")}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {/* Blurred rows */}
+                        {result.items.length > 2 && (
+                          <>
+                            {result.items.slice(2, Math.min(5, result.items.length)).map((item, index) => (
+                              <tr key={`blur-${index}`} className="border-b border-[#161616]/5 select-none">
+                                <td className="py-3 px-2 text-[#161616] blur-sm">Hidden item name</td>
+                                <td className="py-3 px-2 text-right text-[#161616] font-medium blur-sm">$X,XXX</td>
+                                <td className="py-3 px-2 text-right text-[#33C791] font-medium blur-sm">$X,XXX</td>
+                                <td className="py-3 px-2 text-right font-semibold text-[#FA5424] blur-sm">+$XXX</td>
+                              </tr>
+                            ))}
+                          </>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Remaining items count */}
+                  {result.items.length > 2 && (
+                    <div className="mt-4 text-center text-sm text-[#161616]/50">
+                      + {result.items.length - 2} more items hidden
+                    </div>
+                  )}
+
+                  {/* Gradient overlay at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">
-                  Unlock Full Analysis
-                </h3>
-                <p className="text-white/60 mb-6 max-w-md mx-auto">
-                  Get the complete line-by-line breakdown showing exactly where
-                  you're being overcharged and how much you could save.
-                </p>
-                <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                  Unlock for $9.99
-                </button>
-                <p className="text-white/40 text-sm mt-4">
-                  One-time payment • Instant access • 30-day money-back guarantee
-                </p>
+              )}
+
+              {/* Paywall CTA */}
+              <div className="bg-[#161616] rounded-3xl p-8 text-center relative overflow-hidden">
+                <div className="absolute inset-0 opacity-5">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#0D8DFF] to-[#33C791]" />
+                </div>
+                <div className="relative">
+                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Lock className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    Unlock Full Analysis
+                  </h3>
+                  <p className="text-white/60 mb-6 max-w-md mx-auto">
+                    See all {result.items?.length || 0} line items with fair market prices
+                    and exactly how much you can save on each.
+                  </p>
+                  <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
+                    Unlock for $9.99
+                  </button>
+                  <p className="text-white/40 text-sm mt-4">
+                    One-time payment • Instant access • 30-day money-back guarantee
+                  </p>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </>
       )}
