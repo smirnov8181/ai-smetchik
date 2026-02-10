@@ -5,7 +5,7 @@ export function FooterRu() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-[#161616]/5 bg-white/50">
+    <footer className="mt-12 border-t border-[#161616]/5 bg-white/50">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           {/* Brand + copyright */}
