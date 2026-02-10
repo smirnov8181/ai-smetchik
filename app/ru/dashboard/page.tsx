@@ -3,6 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { Plus, FileText, ShieldCheck, ArrowRight } from "lucide-react";
 import { EstimateCard } from "@/components/estimate-card";
 import { VerificationCard } from "@/components/verification-card";
+import {
+  AnimatedStatsGrid,
+  AnimatedStatCard,
+  AnimatedSectionHeader,
+  AnimatedCardList,
+  AnimatedCardItem,
+  AnimatedEmptyState,
+} from "@/components/dashboard-animations";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -37,111 +45,129 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-[#0D8DFF]/10 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-[#0D8DFF]" />
+      <AnimatedStatsGrid>
+        <AnimatedStatCard>
+          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#0D8DFF]/10 rounded-xl flex items-center justify-center">
+                <FileText className="w-5 h-5 text-[#0D8DFF]" />
+              </div>
+              <span className="text-sm text-[#161616]/50">Тариф</span>
             </div>
-            <span className="text-sm text-[#161616]/50">Тариф</span>
+            <p className="text-2xl font-bold text-[#161616] capitalize">{plan}</p>
           </div>
-          <p className="text-2xl font-bold text-[#161616] capitalize">{plan}</p>
-        </div>
+        </AnimatedStatCard>
 
-        <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-[#33C791]/10 rounded-xl flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-[#33C791]" />
+        <AnimatedStatCard>
+          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#33C791]/10 rounded-xl flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-[#33C791]" />
+              </div>
+              <span className="text-sm text-[#161616]/50">Использовано смет</span>
             </div>
-            <span className="text-sm text-[#161616]/50">Использовано смет</span>
+            <p className="text-2xl font-bold text-[#161616]">
+              {estimatesUsed} / {plan === "business" ? "\u221E" : estimatesLimit}
+            </p>
           </div>
-          <p className="text-2xl font-bold text-[#161616]">
-            {estimatesUsed} / {plan === "business" ? "∞" : estimatesLimit}
-          </p>
-        </div>
+        </AnimatedStatCard>
 
-        <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-[#FA5424]/10 rounded-xl flex items-center justify-center">
-              <FileText className="w-5 h-5 text-[#FA5424]" />
+        <AnimatedStatCard>
+          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#FA5424]/10 rounded-xl flex items-center justify-center">
+                <FileText className="w-5 h-5 text-[#FA5424]" />
+              </div>
+              <span className="text-sm text-[#161616]/50">Всего смет</span>
             </div>
-            <span className="text-sm text-[#161616]/50">Всего смет</span>
+            <p className="text-2xl font-bold text-[#161616]">{estimates?.length ?? 0}</p>
           </div>
-          <p className="text-2xl font-bold text-[#161616]">{estimates?.length ?? 0}</p>
-        </div>
-      </div>
+        </AnimatedStatCard>
+      </AnimatedStatsGrid>
 
       {/* Estimates list */}
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#161616]">Мои сметы</h2>
-          <Link href="/ru/dashboard/estimates/new">
-            <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
-              <Plus className="w-5 h-5" />
-              Новая смета
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </Link>
-        </div>
-
-        {!estimates || estimates.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
-            <div className="w-16 h-16 bg-[#0D8DFF]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileText className="w-8 h-8 text-[#0D8DFF]" />
-            </div>
-            <h3 className="text-xl font-bold text-[#161616] mb-2">Пока нет смет</h3>
-            <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
-              Создайте первую смету — опишите проект или загрузите файлы
-            </p>
+        <AnimatedSectionHeader>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-[#161616]">Мои сметы</h2>
             <Link href="/ru/dashboard/estimates/new">
-              <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                Создать смету
+              <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+                <Plus className="w-5 h-5" />
+                Новая смета
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
           </div>
+        </AnimatedSectionHeader>
+
+        {!estimates || estimates.length === 0 ? (
+          <AnimatedEmptyState>
+            <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
+              <div className="w-16 h-16 bg-[#0D8DFF]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-8 h-8 text-[#0D8DFF]" />
+              </div>
+              <h3 className="text-xl font-bold text-[#161616] mb-2">Пока нет смет</h3>
+              <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
+                Создайте первую смету — опишите проект или загрузите файлы
+              </p>
+              <Link href="/ru/dashboard/estimates/new">
+                <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
+                  Создать смету
+                </button>
+              </Link>
+            </div>
+          </AnimatedEmptyState>
         ) : (
-          <div className="space-y-3">
+          <AnimatedCardList>
             {estimates.map((estimate) => (
-              <EstimateCard key={estimate.id} estimate={estimate} />
+              <AnimatedCardItem key={estimate.id}>
+                <EstimateCard estimate={estimate} />
+              </AnimatedCardItem>
             ))}
-          </div>
+          </AnimatedCardList>
         )}
       </div>
 
       {/* Verifications list */}
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#161616]">Проверки смет</h2>
-          <Link href="/ru/dashboard/verify/new">
-            <button className="cursor-pointer group flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
-              <ShieldCheck className="w-5 h-5" />
-              Проверить смету
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </Link>
-        </div>
-
-        {!verifications || verifications.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
-            <div className="w-16 h-16 bg-[#33C791]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShieldCheck className="w-8 h-8 text-[#33C791]" />
-            </div>
-            <h3 className="text-xl font-bold text-[#161616] mb-2">Нет проверок</h3>
-            <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
-              Загрузите смету подрядчика — узнайте, не завышены ли цены
-            </p>
+        <AnimatedSectionHeader>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-[#161616]">Проверки смет</h2>
             <Link href="/ru/dashboard/verify/new">
-              <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
+              <button className="cursor-pointer group flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+                <ShieldCheck className="w-5 h-5" />
                 Проверить смету
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
           </div>
+        </AnimatedSectionHeader>
+
+        {!verifications || verifications.length === 0 ? (
+          <AnimatedEmptyState>
+            <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
+              <div className="w-16 h-16 bg-[#33C791]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="w-8 h-8 text-[#33C791]" />
+              </div>
+              <h3 className="text-xl font-bold text-[#161616] mb-2">Нет проверок</h3>
+              <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
+                Загрузите смету подрядчика — узнайте, не завышены ли цены
+              </p>
+              <Link href="/ru/dashboard/verify/new">
+                <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
+                  Проверить смету
+                </button>
+              </Link>
+            </div>
+          </AnimatedEmptyState>
         ) : (
-          <div className="space-y-3">
+          <AnimatedCardList>
             {verifications.map((v) => (
-              <VerificationCard key={v.id} verification={v} />
+              <AnimatedCardItem key={v.id}>
+                <VerificationCard verification={v} />
+              </AnimatedCardItem>
             ))}
-          </div>
+          </AnimatedCardList>
         )}
       </div>
     </div>

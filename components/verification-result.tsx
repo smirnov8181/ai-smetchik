@@ -28,6 +28,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { FadeIn, ScaleIn } from "@/components/ui/animations";
 
 interface VerificationResultProps {
   result: VerificationResultType;
@@ -136,6 +137,7 @@ export function VerificationResult({
   return (
     <div className="space-y-6">
       {/* Verdict Card — always visible */}
+      <ScaleIn>
       <Card className={`border ${verdict.bg}`}>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -186,9 +188,11 @@ export function VerificationResult({
           <p className="text-muted-foreground">{result.summary}</p>
         </CardContent>
       </Card>
+      </ScaleIn>
 
       {/* Free preview: top overpriced items */}
       {overpayItems.length > 0 && (
+        <FadeIn direction="up" delay={0.2}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -278,10 +282,12 @@ export function VerificationResult({
             </div>
           </CardContent>
         </Card>
+        </FadeIn>
       )}
 
       {/* Paywall */}
       {!isPaid && overpayItems.length > freePreviewCount && (
+        <ScaleIn delay={0.3}>
         <Card className="border-primary">
           <CardContent className="py-8 text-center">
             <Lock className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
@@ -310,10 +316,12 @@ export function VerificationResult({
             </p>
           </CardContent>
         </Card>
+        </ScaleIn>
       )}
 
       {/* Full results if paid */}
       {isPaid && okItems.length > 0 && (
+        <FadeIn direction="up" delay={0.3}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -354,10 +362,12 @@ export function VerificationResult({
             </div>
           </CardContent>
         </Card>
+        </FadeIn>
       )}
 
       {/* Recommendations if paid */}
       {isPaid && result.recommendations.length > 0 && (
+        <FadeIn direction="up" delay={0.4}>
         <Card>
           <CardHeader>
             <CardTitle>Рекомендации</CardTitle>
@@ -379,6 +389,7 @@ export function VerificationResult({
             </ul>
           </CardContent>
         </Card>
+        </FadeIn>
       )}
     </div>
   );

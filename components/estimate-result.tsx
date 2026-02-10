@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
 import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
+import { FadeIn, AnimatedBar, ScaleIn } from "@/components/ui/animations";
 
 interface EstimateResultProps {
   result: EstimateResultType & {
@@ -592,18 +593,18 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                 {/* Visual bar */}
                 <div className="h-4 rounded-full overflow-hidden flex mb-3">
                   <div
-                    className="bg-blue-500 transition-all"
+                    className="bg-blue-500 animate-bar-grow origin-left"
                     style={{ width: `${laborPercent}%` }}
                     title={`Работы: ${laborPercent}%`}
                   />
                   <div
-                    className="bg-emerald-500 transition-all"
-                    style={{ width: `${materialsPercent}%` }}
+                    className="bg-emerald-500 animate-bar-grow origin-left"
+                    style={{ width: `${materialsPercent}%`, animationDelay: "0.2s" }}
                     title={`Материалы: ${materialsPercent}%`}
                   />
                   <div
-                    className="bg-orange-400 transition-all"
-                    style={{ width: `${overheadPercent}%` }}
+                    className="bg-orange-400 animate-bar-grow origin-left"
+                    style={{ width: `${overheadPercent}%`, animationDelay: "0.4s" }}
                     title={`Накладные: ${overheadPercent}%`}
                   />
                 </div>
@@ -714,22 +715,25 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
       </Card>
 
       {/* Detailed Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Детализация работ</CardTitle>
-          {hasPaywall && (
-            <CardDescription>
-              Показано {result.sections.length} из {result.sections.length + hiddenSections} разделов
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          <EstimateTable sections={result.sections} />
-        </CardContent>
-      </Card>
+      <FadeIn direction="up" delay={0.2}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Детализация работ</CardTitle>
+            {hasPaywall && (
+              <CardDescription>
+                Показано {result.sections.length} из {result.sections.length + hiddenSections} разделов
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            <EstimateTable sections={result.sections} />
+          </CardContent>
+        </Card>
+      </FadeIn>
 
       {/* Paywall */}
       {hasPaywall && (
+        <ScaleIn delay={0.3}>
         <Card className="border-primary">
           <CardContent className="py-8 text-center">
             <Lock className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
@@ -757,6 +761,7 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
             </p>
           </CardContent>
         </Card>
+        </ScaleIn>
       )}
 
       {/* Summary Total - so user doesn't need to scroll up */}
