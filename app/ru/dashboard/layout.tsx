@@ -27,7 +27,7 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-[#FAF4EC] flex flex-col">
       <DashboardHeader onLogout={handleLogout} />
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">{children}</main>
+      <main className="flex-1 max-w-7xl mx-auto px-6 pt-8 pb-20 w-full">{children}</main>
       <FooterRu />
     </div>
   );
