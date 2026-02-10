@@ -195,10 +195,11 @@ export async function generateVerificationResult(
 
   let summary: string;
   const recommendations: string[] = [];
+  let negotiation_tips: string[] = [];
+  let contractor_message = "";
 
   const summaryPrompt = isUS ? VERIFICATION_SUMMARY_PROMPT_US : VERIFICATION_SUMMARY_PROMPT;
   const locale = isUS ? "en-US" : "ru-RU";
-  const currency = isUS ? "$" : " руб.";
 
   const fallbackSummary = isUS
     ? `Contractor's estimate is overpriced by ${overpayPercent}% ($${totalOverpay.toLocaleString(locale)})`
@@ -215,15 +216,25 @@ export async function generateVerificationResult(
         },
       ],
       temperature: 0.5,
-      max_tokens: 600,
+      max_tokens: 1500,
+      response_format: { type: "json_object" },
     });
 
-    summary = response.choices[0]?.message?.content || fallbackSummary;
+    const content = response.choices[0]?.message?.content || "";
+    try {
+      const parsed = JSON.parse(content);
+      summary = parsed.summary || fallbackSummary;
+      negotiation_tips = parsed.negotiation_tips || [];
+      contractor_message = parsed.contractor_message || "";
+    } catch {
+      // If JSON parse fails, treat entire response as summary
+      summary = content || fallbackSummary;
+    }
   } catch {
     summary = fallbackSummary;
   }
 
-  // Auto-recommendations
+  // Auto-recommendations (factual per-item data)
   const overpayItems = verifiedItems
     .filter((i) => i.status === "overpay")
     .sort((a, b) => b.overpay_amount - a.overpay_amount);
@@ -249,5 +260,7 @@ export async function generateVerificationResult(
     summary,
     verdict,
     recommendations,
+    negotiation_tips,
+    contractor_message,
   };
 }

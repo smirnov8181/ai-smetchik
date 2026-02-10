@@ -25,12 +25,6 @@ export default async function DashboardPage() {
     .eq("region", "moscow")
     .order("created_at", { ascending: false });
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("user_id", user!.id)
-    .single();
-
   const { data: verifications } = await supabase
     .from("verifications")
     .select("id, status, total_contractor, overpay_amount, overpay_percent, is_paid, created_at")
@@ -38,9 +32,16 @@ export default async function DashboardPage() {
     .eq("region", "moscow")
     .order("created_at", { ascending: false });
 
-  const estimatesUsed = subscription?.estimates_used ?? 0;
-  const estimatesLimit = subscription?.estimates_limit ?? 3;
-  const plan = subscription?.plan ?? "free";
+  // Calculate stats
+  const estimateCount = estimates?.length ?? 0;
+  const verificationCount = verifications?.length ?? 0;
+  const totalOverpayFound = (verifications ?? [])
+    .filter((v) => v.overpay_amount && v.overpay_amount > 0)
+    .reduce((sum, v) => sum + (v.overpay_amount || 0), 0);
+  const maxOverpayPercent = Math.max(
+    0,
+    ...(verifications ?? []).map((v) => v.overpay_percent || 0)
+  );
 
   return (
     <div className="space-y-8">
@@ -52,9 +53,9 @@ export default async function DashboardPage() {
               <div className="w-10 h-10 bg-[#0D8DFF]/10 rounded-xl flex items-center justify-center">
                 <FileText className="w-5 h-5 text-[#0D8DFF]" />
               </div>
-              <span className="text-sm text-[#161616]/50">Тариф</span>
+              <span className="text-sm text-[#161616]/50">Создано смет</span>
             </div>
-            <p className="text-2xl font-bold text-[#161616] capitalize">{plan}</p>
+            <p className="text-2xl font-bold text-[#161616]">{estimateCount}</p>
           </div>
         </AnimatedStatCard>
 
@@ -64,11 +65,9 @@ export default async function DashboardPage() {
               <div className="w-10 h-10 bg-[#33C791]/10 rounded-xl flex items-center justify-center">
                 <ShieldCheck className="w-5 h-5 text-[#33C791]" />
               </div>
-              <span className="text-sm text-[#161616]/50">Использовано смет</span>
+              <span className="text-sm text-[#161616]/50">Проверок</span>
             </div>
-            <p className="text-2xl font-bold text-[#161616]">
-              {estimatesUsed} / {plan === "business" ? "\u221E" : estimatesLimit}
-            </p>
+            <p className="text-2xl font-bold text-[#161616]">{verificationCount}</p>
           </div>
         </AnimatedStatCard>
 
@@ -76,11 +75,20 @@ export default async function DashboardPage() {
           <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#FA5424]/10 rounded-xl flex items-center justify-center">
-                <FileText className="w-5 h-5 text-[#FA5424]" />
+                <ShieldCheck className="w-5 h-5 text-[#FA5424]" />
               </div>
-              <span className="text-sm text-[#161616]/50">Всего смет</span>
+              <span className="text-sm text-[#161616]/50">Найдено переплат</span>
             </div>
-            <p className="text-2xl font-bold text-[#161616]">{estimates?.length ?? 0}</p>
+            <p className="text-2xl font-bold text-[#161616]">
+              {totalOverpayFound > 0
+                ? `${totalOverpayFound.toLocaleString("ru-RU")} \u0440\u0443\u0431.`
+                : "\u2014"}
+            </p>
+            {maxOverpayPercent > 0 && (
+              <p className="text-xs text-[#FA5424] mt-1">
+                макс. +{maxOverpayPercent}%
+              </p>
+            )}
           </div>
         </AnimatedStatCard>
       </AnimatedStatsGrid>

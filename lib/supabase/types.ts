@@ -160,4 +160,6 @@ export interface VerificationResult {
   summary: string;
   verdict: "fair" | "slightly_overpriced" | "overpriced" | "ripoff";
   recommendations: string[];
+  negotiation_tips?: string[];
+  contractor_message?: string;
 }
