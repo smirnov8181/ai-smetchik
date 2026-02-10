@@ -29,6 +29,24 @@ export async function GET(
     return NextResponse.json({ error: "Estimate not found" }, { status: 404 });
   }
 
+  // Stale detection: if processing for more than 5 minutes, mark as error
+  if (estimate.status === "processing") {
+    const createdAt = new Date(estimate.created_at).getTime();
+    const now = Date.now();
+    const STALE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+    if (now - createdAt > STALE_TIMEOUT_MS) {
+      await supabase
+        .from("estimates")
+        .update({
+          status: "error",
+          error_message: "Обработка заняла слишком долго. Попробуйте создать смету заново.",
+        })
+        .eq("id", id);
+      estimate.status = "error";
+      estimate.error_message = "Обработка заняла слишком долго. Попробуйте создать смету заново.";
+    }
+  }
+
   // Also fetch files
   const { data: files } = await supabase
     .from("estimate_files")

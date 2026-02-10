@@ -32,6 +32,24 @@ export async function GET(
     );
   }
 
+  // Stale detection: if processing for more than 5 minutes, mark as error
+  if (verification.status === "processing") {
+    const createdAt = new Date(verification.created_at).getTime();
+    const now = Date.now();
+    const STALE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+    if (now - createdAt > STALE_TIMEOUT_MS) {
+      await supabase
+        .from("verifications")
+        .update({
+          status: "error",
+          error_message: "Обработка заняла слишком долго. Попробуйте загрузить смету заново.",
+        })
+        .eq("id", id);
+      verification.status = "error";
+      verification.error_message = "Обработка заняла слишком долго. Попробуйте загрузить смету заново.";
+    }
+  }
+
   const admin = isAdminUser(user.email ?? undefined);
 
   // Server-side paywall: show all items but strip market prices and recommendations

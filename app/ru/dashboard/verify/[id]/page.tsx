@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { VerificationResult } from "@/components/verification-result";
@@ -14,11 +14,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, AlertCircle, ShieldCheck, RefreshCw } from "lucide-react";
 import type {
   Verification,
   VerificationResult as VerificationResultType,
 } from "@/lib/supabase/types";
+
+const POLLING_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
 export default function VerificationDetailPage() {
   const params = useParams();
@@ -30,9 +32,37 @@ export default function VerificationDetailPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const pollingStartRef = useRef<number>(0);
+
+  const handleRetry = useCallback(async () => {
+    setRetrying(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/verify/${id}/retry`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Не удалось перезапустить обработку");
+        setRetrying(false);
+        return;
+      }
+      const reader = res.body?.getReader();
+      if (reader) {
+        reader.read().catch(() => {});
+        (async () => { try { while (!(await reader.read()).done); } catch {} })();
+      }
+      setVerification((prev) => prev ? { ...prev, status: "processing", error_message: null } as Verification : prev);
+      setRetrying(false);
+      pollingStartRef.current = Date.now();
+    } catch {
+      setError("Ошибка сети. Попробуйте ещё раз.");
+      setRetrying(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    pollingStartRef.current = Date.now();
 
     const fetchVerification = async () => {
       try {
@@ -51,13 +81,25 @@ export default function VerificationDetailPage() {
 
         if (data.verification.status === "processing") {
           interval = setInterval(async () => {
-            const res = await fetch(`/api/verify/${id}`);
-            const data = await res.json();
-            if (res.ok) {
-              setVerification(data.verification);
-              if (data.verification.status !== "processing") {
-                clearInterval(interval);
+            // Client-side timeout
+            if (Date.now() - pollingStartRef.current > POLLING_TIMEOUT_MS) {
+              clearInterval(interval);
+              setVerification((prev) =>
+                prev ? { ...prev, status: "error", error_message: "Обработка заняла слишком долго. Нажмите «Повторить» чтобы попробовать снова." } as Verification : prev
+              );
+              return;
+            }
+            try {
+              const res = await fetch(`/api/verify/${id}`);
+              const data = await res.json();
+              if (res.ok) {
+                setVerification(data.verification);
+                if (data.verification.status !== "processing") {
+                  clearInterval(interval);
+                }
               }
+            } catch {
+              // Network error — continue polling
             }
           }, 3000);
         }
@@ -140,14 +182,22 @@ export default function VerificationDetailPage() {
                   {verification.error_message ||
                     "Не удалось распознать смету. Попробуйте загрузить в другом формате."}
                 </p>
-                <Link
-                  href="/ru/dashboard/verify/new"
-                  className="mt-3 inline-block"
-                >
-                  <Button variant="outline" size="sm">
-                    Попробовать снова
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleRetry}
+                    disabled={retrying}
+                  >
+                    <RefreshCw className={`mr-1 h-4 w-4 ${retrying ? "animate-spin" : ""}`} />
+                    {retrying ? "Повторяем..." : "Повторить"}
                   </Button>
-                </Link>
+                  <Link href="/ru/dashboard/verify/new">
+                    <Button variant="outline" size="sm">
+                      Загрузить заново
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </CardContent>

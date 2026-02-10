@@ -125,6 +125,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  button,
+  [role="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="button"],
+  summary {
+    cursor: pointer;
+  }
 }
 
 /* Animated bar grow for progress indicators */

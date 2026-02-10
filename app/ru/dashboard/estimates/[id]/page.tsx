@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EstimateResult } from "@/components/estimate-result";
@@ -14,12 +14,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type {
   Estimate,
   EstimateResult as EstimateResultType,
 } from "@/lib/supabase/types";
+
+const POLLING_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
 export default function EstimateDetailPage() {
   const params = useParams();
@@ -30,9 +32,40 @@ export default function EstimateDetailPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const pollingStartRef = useRef<number>(0);
+
+  const handleRetry = useCallback(async () => {
+    setRetrying(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/estimates/${id}/retry`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Не удалось перезапустить обработку");
+        setRetrying(false);
+        return;
+      }
+      // Read first SSE chunk then drain
+      const reader = res.body?.getReader();
+      if (reader) {
+        reader.read().catch(() => {});
+        // Fire-and-forget drain
+        (async () => { try { while (!(await reader.read()).done); } catch {} })();
+      }
+      // Reset estimate to processing and restart polling
+      setEstimate((prev) => prev ? { ...prev, status: "processing", error_message: null } as Estimate : prev);
+      setRetrying(false);
+      pollingStartRef.current = Date.now();
+    } catch {
+      setError("Ошибка сети. Попробуйте ещё раз.");
+      setRetrying(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    pollingStartRef.current = Date.now();
 
     const fetchEstimate = async () => {
       try {
@@ -52,13 +85,25 @@ export default function EstimateDetailPage() {
         // Keep polling if still processing
         if (data.estimate.status === "processing") {
           interval = setInterval(async () => {
-            const res = await fetch(`/api/estimates/${id}`);
-            const data = await res.json();
-            if (res.ok) {
-              setEstimate(data.estimate);
-              if (data.estimate.status !== "processing") {
-                clearInterval(interval);
+            // Client-side timeout: stop polling after 3 minutes
+            if (Date.now() - pollingStartRef.current > POLLING_TIMEOUT_MS) {
+              clearInterval(interval);
+              setEstimate((prev) =>
+                prev ? { ...prev, status: "error", error_message: "Обработка заняла слишком долго. Нажмите «Повторить» чтобы попробовать снова." } as Estimate : prev
+              );
+              return;
+            }
+            try {
+              const res = await fetch(`/api/estimates/${id}`);
+              const data = await res.json();
+              if (res.ok) {
+                setEstimate(data.estimate);
+                if (data.estimate.status !== "processing") {
+                  clearInterval(interval);
+                }
               }
+            } catch {
+              // Network error — continue polling
             }
           }, 3000);
         }
@@ -139,11 +184,22 @@ export default function EstimateDetailPage() {
                   {estimate.error_message ||
                     "Произошла ошибка при обработке сметы. Попробуйте ещё раз."}
                 </p>
-                <Link href="/ru/dashboard/estimates/new" className="mt-3 inline-block">
-                  <Button variant="outline" size="sm">
-                    Создать новую смету
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleRetry}
+                    disabled={retrying}
+                  >
+                    <RefreshCw className={`mr-1 h-4 w-4 ${retrying ? "animate-spin" : ""}`} />
+                    {retrying ? "Повторяем..." : "Повторить"}
                   </Button>
-                </Link>
+                  <Link href="/ru/dashboard/estimates/new">
+                    <Button variant="outline" size="sm">
+                      Создать новую
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </CardContent>

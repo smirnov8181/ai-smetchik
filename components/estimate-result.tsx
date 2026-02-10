@@ -399,19 +399,42 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
 
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
+      // Load Cyrillic font
+      const fontResponse = await fetch("/fonts/Roboto-Regular.ttf");
+      const fontBuffer = await fontResponse.arrayBuffer();
+      const fontBase64 = btoa(
+        new Uint8Array(fontBuffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+      doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+      doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+
+      const boldResponse = await fetch("/fonts/Roboto-Bold.ttf");
+      const boldBuffer = await boldResponse.arrayBuffer();
+      const boldBase64 = btoa(
+        new Uint8Array(boldBuffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+      doc.addFileToVFS("Roboto-Bold.ttf", boldBase64);
+      doc.addFont("Roboto-Bold.ttf", "Roboto", "bold");
+
+      doc.setFont("Roboto", "normal");
+
       // Title
+      doc.setFont("Roboto", "bold");
       doc.setFontSize(18);
-      doc.text("AI Smetcik", 14, 20);
+      doc.text("AI Сметчик", 14, 20);
+      doc.setFont("Roboto", "normal");
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Smeta #${estimateId.slice(0, 8)} | ${new Date().toLocaleDateString("ru-RU")}`, 14, 28);
+      doc.text(`Смета #${estimateId.slice(0, 8)} | ${new Date().toLocaleDateString("ru-RU")}`, 14, 28);
 
       // Summary
+      doc.setFont("Roboto", "bold");
       doc.setFontSize(12);
       doc.setTextColor(0);
-      doc.text(`Itogo: ${formatPrice(finalTotal)} rub.`, 14, 40);
+      doc.text(`Итого: ${formatPrice(finalTotal)} руб.`, 14, 40);
+      doc.setFont("Roboto", "normal");
       doc.setFontSize(9);
-      doc.text(`Raboty: ${formatPrice(result.subtotal_labor)} rub. | Materialy: ${formatPrice(adjustedMaterials)} rub. | Nakladnye: ${formatPrice(adjustedOverhead)} rub.`, 14, 47);
+      doc.text(`Работы: ${formatPrice(result.subtotal_labor)} руб. | Материалы: ${formatPrice(adjustedMaterials)} руб. | Накладные: ${formatPrice(adjustedOverhead)} руб.`, 14, 47);
 
       let yOffset = 55;
 
@@ -422,10 +445,14 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
           yOffset = 20;
         }
 
+        doc.setFont("Roboto", "bold");
         doc.setFontSize(11);
         doc.setTextColor(0);
         doc.text(section.category, 14, yOffset);
+        doc.setFont("Roboto", "normal");
         yOffset += 5;
+
+        const sectionTotal = section.items.reduce((sum, item) => sum + item.total, 0);
 
         const tableData = section.items.map((item) => [
           item.work,
@@ -437,11 +464,13 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
 
         autoTable(doc, {
           startY: yOffset,
-          head: [["Rabota", "Ed.", "Kol-vo", "Cena", "Summa"]],
+          head: [["Работа", "Ед.", "Кол-во", "Цена", "Сумма"]],
           body: tableData,
+          foot: [["", "", "", "Итого:", formatPrice(sectionTotal)]],
           theme: "grid",
-          styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [22, 22, 22], textColor: [255, 255, 255] },
+          styles: { fontSize: 8, cellPadding: 2, font: "Roboto" },
+          headStyles: { fillColor: [22, 22, 22], textColor: [255, 255, 255], font: "Roboto", fontStyle: "bold" },
+          footStyles: { fillColor: [245, 245, 245], textColor: [0, 0, 0], font: "Roboto", fontStyle: "bold" },
           columnStyles: {
             0: { cellWidth: 70 },
             3: { halign: "right" as const },
@@ -461,12 +490,12 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
       }
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text("Sozdano v AI Smetcik | ai-smetcik.vercel.app", 14, 290);
+      doc.text("Создано в AI Сметчик | ai-smetcik.vercel.app", 14, 290);
 
       doc.save(`smeta-${estimateId.slice(0, 8)}.pdf`);
     } catch (error) {
       console.error("PDF export error:", error);
-      alert("Oshibka eksporta PDF");
+      alert("Ошибка экспорта PDF. Попробуйте ещё раз.");
     } finally {
       setIsExportingPdf(false);
     }
