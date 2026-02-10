@@ -236,16 +236,15 @@ export function VerificationResult({
       </ScaleIn>
 
       {/* Items table — always visible, but with limited info for free users */}
-      <FadeIn direction="up" delay={0.2}>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldAlert className="h-5 w-5 text-muted-foreground" />
-            Все позиции сметы
+            {hasPaywall ? `Позиции с завышенной ценой` : "Все позиции сметы"}
           </CardTitle>
           <CardDescription>
             {hasPaywall
-              ? "Проверьте, что AI правильно распознал позиции. Точные цены — в полном отчёте."
+              ? `Найдено ${overpayItems.length} завышенных из ${items.length} позиций`
               : "Детальное сравнение каждой позиции с рыночными ценами"}
           </CardDescription>
         </CardHeader>
@@ -264,9 +263,15 @@ export function VerificationResult({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allItems.map((item, i) => (
+                {(hasPaywall ? overpayItems.slice(0, 10) : allItems).map((item, i) => (
                   <TableRow key={i}>
-                    <TableCell>{statusIcons[item.status]}</TableCell>
+                    <TableCell>
+                      {hasPaywall ? (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      ) : (
+                        statusIcons[item.status]
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{item.work}</TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       {formatPrice(item.contractor_price)} руб./{item.unit}
@@ -277,31 +282,44 @@ export function VerificationResult({
                       </TableCell>
                     )}
                     <TableCell className="text-right whitespace-nowrap">
-                      {item.status === "ok" ? (
+                      {hasPaywall ? (
+                        <span className="blur-sm select-none text-muted-foreground">***</span>
+                      ) : item.status === "ok" ? (
                         <span className="text-green-600 font-medium">OK</span>
                       ) : (
                         <span className="font-semibold text-red-600">
                           +{item.overpay_percent}%
-                          {!hasPaywall && (
-                            <span className="block text-xs font-normal">
-                              {formatPrice(item.overpay_amount)} руб.
-                            </span>
-                          )}
+                          <span className="block text-xs font-normal">
+                            {formatPrice(item.overpay_amount)} руб.
+                          </span>
                         </span>
                       )}
                     </TableCell>
                   </TableRow>
                 ))}
+                {/* Show locked rows hint for remaining items */}
+                {hasPaywall && (
+                  <TableRow className="bg-muted/30">
+                    <TableCell colSpan={3} className="text-center py-4">
+                      <span className="text-sm text-muted-foreground">
+                        <Lock className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
+                        {overpayItems.length > 10
+                          ? `Ещё ${overpayItems.length - 10} завышенных + ${okItems.length} адекватных позиций`
+                          : `+ ${okItems.length} позиций с адекватной ценой`}
+                        {" "}в полном отчёте
+                      </span>
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
-      </FadeIn>
 
       {/* Paywall block — for unpaid users */}
       {hasPaywall && (
-        <ScaleIn delay={0.3}>
         <Card className="border-primary/30 bg-gradient-to-b from-background to-muted/30">
           <CardContent className="pt-8 pb-8 px-6">
             <div className="text-center">
@@ -364,12 +382,10 @@ export function VerificationResult({
             </div>
           </CardContent>
         </Card>
-        </ScaleIn>
       )}
 
       {/* Full results if paid */}
       {isPaid && okItems.length > 0 && (
-        <FadeIn direction="up" delay={0.3}>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -410,12 +426,10 @@ export function VerificationResult({
             </div>
           </CardContent>
         </Card>
-        </FadeIn>
       )}
 
       {/* Recommendations if paid */}
       {isPaid && result.recommendations.length > 0 && (
-        <FadeIn direction="up" delay={0.4}>
         <Card>
           <CardHeader>
             <CardTitle>Рекомендации</CardTitle>
@@ -437,7 +451,6 @@ export function VerificationResult({
             </ul>
           </CardContent>
         </Card>
-        </FadeIn>
       )}
     </div>
   );
