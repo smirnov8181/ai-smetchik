@@ -69,7 +69,7 @@ export function VerificationForm() {
         }
       }
 
-      // Step 2: Send API request and get verification ID from first SSE event, then redirect
+      // Step 2: Send API request — fire and forget (don't read SSE body, let server process)
       setUploadProgress("Запускаем AI анализ...");
 
       const response = await fetch("/api/verify", {
@@ -87,7 +87,7 @@ export function VerificationForm() {
         throw new Error(errText || "Ошибка сервера");
       }
 
-      // Read only the first SSE event to get the verification ID, then redirect
+      // Read the first SSE chunk to get the verification ID
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error("No response body");
@@ -96,7 +96,6 @@ export function VerificationForm() {
       const decoder = new TextDecoder();
       let verificationId = "";
 
-      // Read first chunk to get the ID
       const { done, value } = await reader.read();
       if (!done && value) {
         const chunk = decoder.decode(value);
@@ -106,20 +105,28 @@ export function VerificationForm() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.id) verificationId = data.id;
-              if (data.status === "error" && data.error) {
-                throw new Error(data.error);
-              }
-            } catch (parseErr) {
-              if (parseErr instanceof Error && parseErr.message !== "Unexpected end of JSON input") {
-                throw parseErr;
-              }
+            } catch {
+              // ignore parse errors on partial chunks
             }
           }
         }
       }
 
       if (verificationId) {
-        // Redirect immediately — the result page will poll for completion
+        // Continue reading the stream in background to keep the Vercel function alive
+        const drainStream = async () => {
+          try {
+            while (true) {
+              const { done } = await reader.read();
+              if (done) break;
+            }
+          } catch {
+            // Connection lost — server writes to DB independently
+          }
+        };
+        drainStream(); // fire-and-forget
+
+        // Redirect immediately to result page
         router.push(`/ru/dashboard/verify/${verificationId}`);
       } else {
         throw new Error("Не удалось создать проверку");
