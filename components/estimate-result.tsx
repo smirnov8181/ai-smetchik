@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
+import { FileSpreadsheet, FileDown, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
 import { FadeIn, AnimatedBar, ScaleIn } from "@/components/ui/animations";
 
 interface EstimateResultProps {
@@ -237,6 +237,7 @@ function generateHumanSummary(sections: EstimateResultType["sections"]): string 
 
 export function EstimateResult({ result, estimateId, isPaid = false, shareToken: initialShareToken, isPublic = false }: EstimateResultProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(initialShareToken || null);
@@ -387,6 +388,87 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
       alert(error instanceof Error ? error.message : "Ошибка экспорта");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const { default: autoTable } = await import("jspdf-autotable");
+
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      // Title
+      doc.setFontSize(18);
+      doc.text("AI Smetcik", 14, 20);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Smeta #${estimateId.slice(0, 8)} | ${new Date().toLocaleDateString("ru-RU")}`, 14, 28);
+
+      // Summary
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text(`Itogo: ${formatPrice(finalTotal)} rub.`, 14, 40);
+      doc.setFontSize(9);
+      doc.text(`Raboty: ${formatPrice(result.subtotal_labor)} rub. | Materialy: ${formatPrice(adjustedMaterials)} rub. | Nakladnye: ${formatPrice(adjustedOverhead)} rub.`, 14, 47);
+
+      let yOffset = 55;
+
+      // Sections as tables
+      for (const section of result.sections) {
+        if (yOffset > 260) {
+          doc.addPage();
+          yOffset = 20;
+        }
+
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+        doc.text(section.category, 14, yOffset);
+        yOffset += 5;
+
+        const tableData = section.items.map((item) => [
+          item.work,
+          item.unit,
+          String(item.quantity),
+          formatPrice(item.price_per_unit),
+          formatPrice(item.total),
+        ]);
+
+        autoTable(doc, {
+          startY: yOffset,
+          head: [["Rabota", "Ed.", "Kol-vo", "Cena", "Summa"]],
+          body: tableData,
+          theme: "grid",
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [22, 22, 22], textColor: [255, 255, 255] },
+          columnStyles: {
+            0: { cellWidth: 70 },
+            3: { halign: "right" as const },
+            4: { halign: "right" as const },
+          },
+          margin: { left: 14, right: 14 },
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        yOffset = ((doc as any).lastAutoTable?.finalY ?? yOffset + 30) + 8;
+      }
+
+      // Footer
+      if (yOffset > 270) {
+        doc.addPage();
+        yOffset = 20;
+      }
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text("Sozdano v AI Smetcik | ai-smetcik.vercel.app", 14, 290);
+
+      doc.save(`smeta-${estimateId.slice(0, 8)}.pdf`);
+    } catch (error) {
+      console.error("PDF export error:", error);
+      alert("Oshibka eksporta PDF");
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -691,6 +773,17 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                 )}
 
                 {!isPublic && (
+                  <Button variant="secondary" onClick={handleExportPdf} disabled={isExportingPdf}>
+                    {isExportingPdf ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileDown className="mr-2 h-4 w-4" />
+                    )}
+                    Скачать PDF
+                  </Button>
+                )}
+
+                {!isPublic && (
                   <Button
                     variant={shareToken ? "outline" : "secondary"}
                     onClick={handleShare}
@@ -764,58 +857,62 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
         </ScaleIn>
       )}
 
-      {/* Summary Total - so user doesn't need to scroll up */}
-      <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-        <CardContent className="py-6 space-y-4">
-          {/* Material Tier Toggle */}
-          <div className="flex justify-center gap-2">
-            {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => {
-              const isSelected = qualityTier === tier;
-              return (
-                <button
-                  key={tier}
-                  onClick={() => setQualityTier(tier)}
-                  className={`
-                    flex-1 max-w-[120px] py-2 px-3 rounded-xl text-center transition-all duration-200
-                    ${isSelected
-                      ? "bg-white dark:bg-slate-800 shadow-md ring-2 ring-primary/20 border border-primary/30"
-                      : "bg-slate-100/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-transparent"
-                    }
-                  `}
-                >
-                  <div className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-slate-500"}`}>
-                    {qualityTiers[tier].label}
-                  </div>
-                  <div className={`text-xs mt-0.5 ${isSelected ? "text-primary/70" : "text-slate-400"}`}>
-                    {formatPrice(tierPrices[tier])} ₽
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Total */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Итого по смете</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {qualityTiers[qualityTier].label} • {result.sections.reduce((sum, s) => sum + s.items.length, 0)}{hasPaywall ? `+${hiddenItems}` : ""} позиций
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold">{formatPrice(finalTotal)}</span>
-                <span className="text-lg text-muted-foreground">₽</span>
+      {/* Summary Total - so user doesn't need to scroll up (paid only) */}
+      {!hasPaywall && (
+        <FadeIn direction="up" delay={0.1}>
+          <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+            <CardContent className="py-6 space-y-4">
+              {/* Material Tier Toggle */}
+              <div className="flex justify-center gap-2">
+                {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => {
+                  const isSelected = qualityTier === tier;
+                  return (
+                    <button
+                      key={tier}
+                      onClick={() => setQualityTier(tier)}
+                      className={`
+                        flex-1 max-w-[120px] py-2 px-3 rounded-xl text-center transition-all duration-200
+                        ${isSelected
+                          ? "bg-white dark:bg-slate-800 shadow-md ring-2 ring-primary/20 border border-primary/30"
+                          : "bg-slate-100/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-transparent"
+                        }
+                      `}
+                    >
+                      <div className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-slate-500"}`}>
+                        {qualityTiers[tier].label}
+                      </div>
+                      <div className={`text-xs mt-0.5 ${isSelected ? "text-primary/70" : "text-slate-400"}`}>
+                        {formatPrice(tierPrices[tier])} ₽
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              {totalDiff !== 0 && (
-                <span className={`text-sm font-medium ${totalDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
-                  {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)} ₽ от базовой
-                </span>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
+              {/* Total */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Итого по смете</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {qualityTiers[qualityTier].label} • {result.sections.reduce((sum, s) => sum + s.items.length, 0)} позиций
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-bold">{formatPrice(finalTotal)}</span>
+                    <span className="text-lg text-muted-foreground">₽</span>
+                  </div>
+                  {totalDiff !== 0 && (
+                    <span className={`text-sm font-medium ${totalDiff > 0 ? "text-orange-500" : "text-green-500"}`}>
+                      {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)} ₽ от базовой
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </FadeIn>
+      )}
 
       {/* What if scenarios - decision simulator (only for paid) */}
       {!hasPaywall && applicableScenarios.length > 0 && (
