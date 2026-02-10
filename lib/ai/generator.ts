@@ -62,7 +62,7 @@ export async function generateEstimate(
   };
 
   let summary: string;
-  let caveats: string[] = [];
+  const caveats: string[] = [];
 
   try {
     const response = await ai.chat.completions.create({

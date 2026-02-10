@@ -234,7 +234,7 @@ export function parseContractorXlsx(buffer: Buffer): ParsedContractorEstimate {
 
     // Find header row (contains "наименование" or similar)
     let headerRow = -1;
-    let colIndices = {
+    const colIndices = {
       name: -1,
       unit: -1,
       quantity: -1,

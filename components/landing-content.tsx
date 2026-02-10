@@ -371,7 +371,7 @@ export function LandingContent() {
       <section className="container mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12">{c.pricing}</h2>
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {c.plans.map((tier, i) => (
+          {c.plans.map((tier) => (
             <Card
               key={tier.plan}
               className={tier.popular ? "border-primary shadow-lg" : ""}

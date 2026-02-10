@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRegion } from "@/lib/i18n/region-context";
 import { RegionSwitcher } from "@/components/region-switcher";
-import { Button } from "@/components/ui/button";
 import { FileText, Plus, LogOut, ShieldCheck } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -11,34 +10,39 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
-  const { t, region } = useRegion();
+  const { t } = useRegion();
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <FileText className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">{t.appName}</span>
+    <header className="border-b border-[#161616]/10 bg-white">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#161616] rounded-xl flex items-center justify-center">
+            <FileText className="h-5 w-5 text-[#FAF4EC]" />
+          </div>
+          <span className="font-bold text-xl text-[#161616]">{t.appName}</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link href="/dashboard/estimates/new">
-            <Button size="sm">
-              <Plus className="mr-1 h-4 w-4" />
-              {t.newEstimate}
-            </Button>
+            <button className="cursor-pointer flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">{t.newEstimate}</span>
+            </button>
           </Link>
           <Link href="/dashboard/verify/new">
-            <Button size="sm" variant="outline">
-              <ShieldCheck className="mr-1 h-4 w-4" />
-              {t.verifyEstimate}
-            </Button>
+            <button className="cursor-pointer flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">{t.verifyEstimate}</span>
+            </button>
           </Link>
           <RegionSwitcher />
           <form action={onLogout}>
-            <Button variant="ghost" size="sm" type="submit">
-              <LogOut className="mr-1 h-4 w-4" />
-              {t.logout}
-            </Button>
+            <button
+              type="submit"
+              className="cursor-pointer flex items-center gap-2 text-[#161616]/70 hover:text-[#161616] font-medium px-3 py-2 rounded-full text-sm transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">{t.logout}</span>
+            </button>
           </form>
         </div>
       </div>

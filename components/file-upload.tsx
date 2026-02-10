@@ -49,7 +49,6 @@ async function compressImage(file: File): Promise<File> {
               type: "image/jpeg",
               lastModified: Date.now(),
             });
-            console.log(`Compressed ${file.name}: ${(file.size/1024).toFixed(0)}KB -> ${(compressedFile.size/1024).toFixed(0)}KB`);
             resolve(compressedFile);
           } else {
             resolve(file);
@@ -73,11 +72,9 @@ export function FileUpload({
   const [isCompressing, setIsCompressing] = useState(false);
 
   const processFiles = useCallback(async (newFiles: File[]) => {
-    console.log("[FileUpload] processFiles called", newFiles.map(f => ({ name: f.name, type: f.type, size: f.size })));
     setIsCompressing(true);
     try {
       const processed = await Promise.all(newFiles.map(compressImage));
-      console.log("[FileUpload] Files processed", processed.map(f => ({ name: f.name, type: f.type, size: f.size })));
       onFilesChange([...files, ...processed].slice(0, maxFiles));
     } finally {
       setIsCompressing(false);

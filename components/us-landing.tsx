@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   Shield,
   ArrowRight,
@@ -10,7 +9,6 @@ import {
   Clock,
   DollarSign,
   CheckCircle2,
-  AlertTriangle,
   Lock,
   MapPin,
   Camera,

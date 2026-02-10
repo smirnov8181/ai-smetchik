@@ -41,6 +41,7 @@ export function EstimateForm() {
       for (const file of files) {
         formData.append("files", file);
       }
+      formData.append("region", "moscow");
 
       const response = await fetch("/api/estimates", {
         method: "POST",

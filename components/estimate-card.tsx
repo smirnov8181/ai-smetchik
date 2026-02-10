@@ -43,7 +43,7 @@ export function EstimateCard({ estimate }: EstimateCardProps) {
       });
 
       if (response.ok) {
-        window.location.reload();
+        router.refresh();
       } else {
         const data = await response.json();
         alert(data.error || "Не удалось удалить смету");

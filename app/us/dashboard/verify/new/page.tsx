@@ -42,6 +42,7 @@ export default function USNewVerificationPage() {
       for (const file of files) {
         formData.append("files", file);
       }
+      formData.append("region", "us_national");
 
       const response = await fetch("/api/verify", {
         method: "POST",

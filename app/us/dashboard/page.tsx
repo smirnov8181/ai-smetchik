@@ -53,6 +53,7 @@ export default function USDashboardPage() {
           .from("verifications")
           .select("id, status, total_contractor, overpay_amount, overpay_percent, is_paid, created_at")
           .eq("user_id", user.id)
+          .eq("region", "us_national")
           .order("created_at", { ascending: false }),
         supabase
           .from("subscriptions")

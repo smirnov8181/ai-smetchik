@@ -11,9 +11,10 @@ import { extractWorkItems } from "@/lib/ai/extractor";
 import { calculatePrices } from "@/lib/ai/calculator";
 import { generateEstimate } from "@/lib/ai/generator";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
+import { validateFiles, sanitizeFileName } from "@/lib/utils/file-validation";
 
 // GET /api/estimates — list user's estimates
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -24,10 +25,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const region = request.nextUrl.searchParams.get("region") || "moscow";
+
   const { data, error } = await supabase
     .from("estimates")
     .select("id, status, input_type, total_amount, created_at, updated_at, result")
     .eq("user_id", user.id)
+    .eq("region", region)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -74,6 +78,13 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const text = formData.get("text") as string | null;
     const files = formData.getAll("files") as File[];
+    const region = (formData.get("region") as string | null) || "moscow";
+
+    // Validate files
+    const fileError = validateFiles(files);
+    if (fileError) {
+      return NextResponse.json({ error: fileError }, { status: 400 });
+    }
 
     // Determine input type
     let inputType: "text" | "pdf" | "photo" | "mixed" = "text";
@@ -94,6 +105,7 @@ export async function POST(request: NextRequest) {
         status: "processing",
         input_type: inputType,
         input_text: text,
+        region,
       })
       .select()
       .single();
@@ -118,7 +130,7 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`data: {"status":"processing"}\n\n`));
           }, 5000);
 
-          await processEstimate(estimate.id, user.id, text, files, serviceClient);
+          await processEstimate(estimate.id, user.id, text, files, serviceClient, region);
 
           clearInterval(heartbeat);
           controller.enqueue(encoder.encode(`data: {"status":"ready","id":"${estimate.id}"}\n\n`));
@@ -153,7 +165,8 @@ async function processEstimate(
   text: string | null,
   files: File[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any
+  supabase: any,
+  region: string = "moscow"
 ) {
   const log = (step: string, data?: unknown) => {
     console.log(`[Estimate ${estimateId.slice(0, 8)}] ${step}`, data || "");
@@ -176,7 +189,8 @@ async function processEstimate(
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = `${userId}/${estimateId}/${file.name}`;
+      const safeName = sanitizeFileName(file.name);
+      const fileName = `${userId}/${estimateId}/${safeName}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
@@ -258,7 +272,7 @@ async function processEstimate(
 
     // Step 3: Calculate prices
     log("Step 3: Calculating prices...");
-    const pricedItems = await calculatePrices(workItems);
+    const pricedItems = await calculatePrices(workItems, region);
     log("Step 3 complete", { pricedCount: pricedItems.length });
 
     // Step 4: Generate final estimate

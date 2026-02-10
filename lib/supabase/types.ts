@@ -9,6 +9,7 @@ export interface Estimate {
   total_amount: number | null;
   error_message: string | null;
   share_token: string | null;
+  region: string;
   created_at: string;
   updated_at: string;
 }
@@ -107,7 +108,7 @@ export interface Verification {
   id: string;
   user_id: string;
   status: "draft" | "processing" | "ready" | "error";
-  input_type: "text" | "pdf" | "photo" | "mixed";
+  input_type: "text" | "pdf" | "photo" | "mixed" | "xlsx";
   input_text: string | null;
   parsed_items: ContractorWorkItem[] | null;
   result: VerificationResult | null;
@@ -117,6 +118,7 @@ export interface Verification {
   overpay_percent: number | null;
   is_paid: boolean;
   error_message: string | null;
+  region: string;
   created_at: string;
   updated_at: string;
 }

@@ -24,10 +24,7 @@ export function VerificationForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[Form] handleSubmit called", { text: text.trim(), filesCount: files.length });
-
     if (!text.trim() && files.length === 0) {
-      console.log("[Form] Validation failed - no input");
       setError("Вставьте смету подрядчика или загрузите файл");
       return;
     }
@@ -42,16 +39,13 @@ export function VerificationForm() {
       }
       for (const file of files) {
         formData.append("files", file);
-        console.log("[Form] Appending file:", file.name, file.type, file.size);
       }
+      formData.append("region", "moscow");
 
-      console.log("[Form] Sending request to /api/verify...");
       const response = await fetch("/api/verify", {
         method: "POST",
         body: formData,
       });
-
-      console.log("[Form] Response received:", response.status, response.ok);
 
       if (!response.ok) {
         const text = await response.text();
@@ -66,17 +60,11 @@ export function VerificationForm() {
 
       const decoder = new TextDecoder();
       let verificationId = "";
-      let finalStatus = "";
-
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          console.log("[Form] Stream done");
-          break;
-        }
+        if (done) break;
 
         const text = decoder.decode(value);
-        console.log("[Form] Stream chunk:", text);
         const lines = text.split("\n");
 
         for (const line of lines) {
@@ -84,8 +72,7 @@ export function VerificationForm() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.id) verificationId = data.id;
-              if (data.status === "ready" || data.status === "error") {
-                finalStatus = data.status;
+              if (data.status === "error") {
                 if (data.error) {
                   throw new Error(data.error);
                 }

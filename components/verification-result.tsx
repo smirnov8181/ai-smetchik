@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -101,7 +100,16 @@ export function VerificationResult({
       }
 
       if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+        try {
+          const url = new URL(data.checkout_url);
+          if (url.hostname.endsWith("stripe.com")) {
+            window.location.href = data.checkout_url;
+          } else {
+            console.error("Invalid checkout URL domain:", url.hostname);
+          }
+        } catch {
+          console.error("Invalid checkout URL");
+        }
       }
     } catch (error) {
       console.error("Payment error:", error);
@@ -112,10 +120,13 @@ export function VerificationResult({
 
   // Show only top 3 items free, rest behind paywall
   const freePreviewCount = 3;
-  const overpayItems = [...result.items]
-    .filter((i) => i.status !== "ok")
-    .sort((a, b) => b.overpay_amount - a.overpay_amount);
-  const okItems = result.items.filter((i) => i.status === "ok");
+  const { overpayItems, okItems } = useMemo(() => {
+    const overpay = [...result.items]
+      .filter((i) => i.status !== "ok")
+      .sort((a, b) => b.overpay_amount - a.overpay_amount);
+    const ok = result.items.filter((i) => i.status === "ok");
+    return { overpayItems: overpay, okItems: ok };
+  }, [result.items]);
 
   return (
     <div className="space-y-6">

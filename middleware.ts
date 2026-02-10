@@ -71,7 +71,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   } catch {
-    // If Supabase auth fails, allow request through
+    // If Supabase auth fails on dashboard routes, redirect to login
+    if (request.nextUrl.pathname.startsWith("/us/dashboard")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/us/login";
+      return NextResponse.redirect(url);
+    }
+    if (request.nextUrl.pathname.startsWith("/dashboard")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    // For login/register pages, allow through even on error
     return NextResponse.next();
   }
 

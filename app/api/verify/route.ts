@@ -12,9 +12,10 @@ import {
 } from "@/lib/ai/verifier";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
 import { parseContractorXlsx, isXlsxBuffer } from "@/lib/utils/xlsx-parser";
+import { validateFiles, sanitizeFileName } from "@/lib/utils/file-validation";
 
 // GET /api/verify — list user's verifications
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -25,12 +26,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const region = request.nextUrl.searchParams.get("region") || "moscow";
+
   const { data, error } = await supabase
     .from("verifications")
     .select(
       "id, status, input_type, total_contractor, overpay_amount, overpay_percent, is_paid, created_at"
     )
     .eq("user_id", user.id)
+    .eq("region", region)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -42,8 +46,6 @@ export async function GET() {
 
 // POST /api/verify — create new verification
 export async function POST(request: NextRequest) {
-  console.log("[Verify API] POST request received");
-
   const supabase = await createClient();
   const serviceClient = createServiceClient();
 
@@ -51,18 +53,21 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("[Verify API] User:", user?.id);
-
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const formData = await request.formData();
-    console.log("[Verify API] FormData received");
     const text = formData.get("text") as string | null;
     const files = formData.getAll("files") as File[];
-    console.log("[Verify API] Files:", files.length, files.map(f => ({ name: f.name, type: f.type, size: f.size })));
+    const region = (formData.get("region") as string | null) || "moscow";
+
+    // Validate files
+    const fileError = validateFiles(files);
+    if (fileError) {
+      return NextResponse.json({ error: fileError }, { status: 400 });
+    }
 
     let inputType: "text" | "pdf" | "photo" | "mixed" | "xlsx" = "text";
     if (files.length > 0 && text) inputType = "mixed";
@@ -87,25 +92,22 @@ export async function POST(request: NextRequest) {
         status: "processing",
         input_type: inputType,
         input_text: text,
+        region,
       })
       .select()
       .single();
 
     if (createError || !verification) {
-      console.log("[Verify API] Create error:", createError);
       return NextResponse.json(
         { error: createError?.message || "Failed to create verification" },
         { status: 500 }
       );
     }
 
-    console.log("[Verify API] Verification created:", verification.id);
-
     // Use streaming to keep connection alive during processing
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        console.log("[Verify API] Stream started");
         // Send initial response
         controller.enqueue(encoder.encode(`data: {"status":"processing","id":"${verification.id}"}\n\n`));
 
@@ -115,13 +117,13 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`data: {"status":"processing"}\n\n`));
           }, 5000);
 
-          console.log("[Verify API] Calling processVerification...");
           await processVerification(
             verification.id,
             user.id,
             text,
             files,
-            serviceClient
+            serviceClient,
+            region
           );
 
           clearInterval(heartbeat);
@@ -157,7 +159,8 @@ async function processVerification(
   text: string | null,
   files: File[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: any
+  supabase: any,
+  region: string = "moscow"
 ) {
   const log = (msg: string, data?: unknown) => {
     console.log(`[Verify ${verificationId.slice(0,8)}] ${msg}`, data || "");
@@ -173,7 +176,8 @@ async function processVerification(
     for (const file of files) {
       log(`Processing file: ${file.name}`, { type: file.type, size: file.size });
       const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = `${userId}/${verificationId}/${file.name}`;
+      const safeName = sanitizeFileName(file.name);
+      const fileName = `${userId}/${verificationId}/${safeName}`;
 
       await supabase.storage
         .from("estimate-files")
@@ -232,13 +236,19 @@ async function processVerification(
         text: text || undefined,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         pdfText: pdfText || undefined,
+        region,
       });
       contractorItems = items;
       log("AI returned items", { count: contractorItems.length, items: contractorItems.slice(0, 3) });
     }
 
     if (!contractorItems || contractorItems.length === 0) {
-      throw new Error("AI не смог распознать позиции сметы. Попробуйте более чёткое фото или текст.");
+      const isUS = region === "us_national" || region.startsWith("US-");
+      throw new Error(
+        isUS
+          ? "AI could not parse the estimate. Please try a clearer photo or text."
+          : "AI не смог распознать позиции сметы. Попробуйте более чёткое фото или текст."
+      );
     }
 
     await supabase
@@ -248,12 +258,12 @@ async function processVerification(
 
     // Step 2: Compare with market prices
     log("Step 2: Verifying prices...");
-    const verifiedItems = await verifyPrices(contractorItems);
+    const verifiedItems = await verifyPrices(contractorItems, region);
     log("Step 2 complete", { verifiedCount: verifiedItems.length });
 
     // Step 3: Generate result
     log("Step 3: Generating result...");
-    const result = await generateVerificationResult(verifiedItems);
+    const result = await generateVerificationResult(verifiedItems, region);
     log("Step 3 complete", { total: result.total_contractor, overpay: result.overpay_percent });
 
     await supabase

@@ -4,41 +4,49 @@ import {
   VerifiedWorkItem,
   VerificationResult,
   VerificationStatus,
-  PriceCatalogItem,
 } from "@/lib/supabase/types";
 import {
   VERIFICATION_PARSER_PROMPT,
+  VERIFICATION_PARSER_PROMPT_US,
   VERIFICATION_SUMMARY_PROMPT,
+  VERIFICATION_SUMMARY_PROMPT_US,
 } from "./prompts";
 import { createServiceClient } from "@/lib/supabase/server";
 import { ai, MODELS } from "./client";
+import { findCatalogMatch } from "./catalog-match";
 
 // Step 1: Parse contractor's estimate
 export async function parseContractorEstimate(params: {
   text?: string;
   imageUrls?: string[];
   pdfText?: string;
+  region?: string;
 }): Promise<{ items: ContractorWorkItem[]; total: number }> {
-  const { text, imageUrls, pdfText } = params;
+  const { text, imageUrls, pdfText, region = "moscow" } = params;
+  const isUS = isUSRegion(region);
 
   const userParts: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+
+  const estimateLabel = isUS ? "Contractor's estimate:" : "Смета подрядчика:";
+  const pdfLabel = isUS ? "Data from PDF estimate:" : "Данные из PDF сметы:";
+  const photoLabel = isUS ? "Photo/scan of estimate:" : "Фото/скан сметы:";
 
   if (text) {
     userParts.push({
       type: "text",
-      text: `Смета подрядчика:\n${text}`,
+      text: `${estimateLabel}\n${text}`,
     });
   }
 
   if (pdfText) {
     userParts.push({
       type: "text",
-      text: `Данные из PDF сметы:\n${pdfText}`,
+      text: `${pdfLabel}\n${pdfText}`,
     });
   }
 
   if (imageUrls && imageUrls.length > 0) {
-    userParts.push({ type: "text", text: "Фото/скан сметы:" });
+    userParts.push({ type: "text", text: photoLabel });
     for (const url of imageUrls) {
       userParts.push({
         type: "image_url",
@@ -53,11 +61,12 @@ export async function parseContractorEstimate(params: {
 
   // Use faster model for image parsing to avoid timeout
   const modelToUse = imageUrls && imageUrls.length > 0 ? MODELS.fast : MODELS.main;
+  const systemPrompt = isUS ? VERIFICATION_PARSER_PROMPT_US : VERIFICATION_PARSER_PROMPT;
 
   const response = await ai.chat.completions.create({
     model: modelToUse,
     messages: [
-      { role: "system", content: VERIFICATION_PARSER_PROMPT },
+      { role: "system", content: systemPrompt },
       { role: "user", content: userParts },
     ],
     temperature: 0.2,
@@ -78,43 +87,6 @@ export async function parseContractorEstimate(params: {
 }
 
 // Step 2: Compare against market prices
-function findCatalogMatch(
-  workName: string,
-  catalog: PriceCatalogItem[]
-): PriceCatalogItem | null {
-  const normalized = workName.toLowerCase().trim();
-
-  const exact = catalog.find(
-    (item) => item.work_name.toLowerCase() === normalized
-  );
-  if (exact) return exact;
-
-  const partial = catalog.find(
-    (item) =>
-      normalized.includes(item.work_name.toLowerCase()) ||
-      item.work_name.toLowerCase().includes(normalized)
-  );
-  if (partial) return partial;
-
-  const workWords = normalized.split(/\s+/);
-  let bestMatch: PriceCatalogItem | null = null;
-  let bestScore = 0;
-
-  for (const item of catalog) {
-    const catalogWords = item.work_name.toLowerCase().split(/\s+/);
-    const overlap = workWords.filter((w) =>
-      catalogWords.some((cw) => cw.includes(w) || w.includes(cw))
-    ).length;
-    const score = overlap / Math.max(workWords.length, catalogWords.length);
-    if (score > bestScore && score >= 0.4) {
-      bestScore = score;
-      bestMatch = item;
-    }
-  }
-
-  return bestMatch;
-}
-
 function getStatus(
   contractorPrice: number,
   marketMax: number,
@@ -125,15 +97,23 @@ function getStatus(
   return "overpay";
 }
 
+function isUSRegion(region: string): boolean {
+  return region === "us_national" || region.startsWith("US-");
+}
+
 export async function verifyPrices(
-  contractorItems: ContractorWorkItem[]
+  contractorItems: ContractorWorkItem[],
+  region: string = "moscow"
 ): Promise<VerifiedWorkItem[]> {
   const supabase = createServiceClient();
 
+  const table = isUSRegion(region) ? "price_catalog_us" : "price_catalog";
+  const queryRegion = region === "us_national" ? "us_national" : region;
+
   const { data: catalog, error } = await supabase
-    .from("price_catalog")
+    .from(table)
     .select("*")
-    .eq("region", "moscow");
+    .eq("region", queryRegion);
 
   if (error) {
     throw new Error(`Failed to fetch price catalog: ${error.message}`);
@@ -172,8 +152,10 @@ export async function verifyPrices(
 
 // Step 3: Generate verification result with AI summary
 export async function generateVerificationResult(
-  verifiedItems: VerifiedWorkItem[]
+  verifiedItems: VerifiedWorkItem[],
+  region: string = "moscow"
 ): Promise<VerificationResult> {
+  const isUS = isUSRegion(region);
   const totalContractor = verifiedItems.reduce(
     (sum, item) => sum + item.contractor_total,
     0
@@ -214,11 +196,19 @@ export async function generateVerificationResult(
   let summary: string;
   const recommendations: string[] = [];
 
+  const summaryPrompt = isUS ? VERIFICATION_SUMMARY_PROMPT_US : VERIFICATION_SUMMARY_PROMPT;
+  const locale = isUS ? "en-US" : "ru-RU";
+  const currency = isUS ? "$" : " руб.";
+
+  const fallbackSummary = isUS
+    ? `Contractor's estimate is overpriced by ${overpayPercent}% ($${totalOverpay.toLocaleString(locale)})`
+    : `Смета подрядчика завышена на ${overpayPercent}% (${totalOverpay.toLocaleString(locale)} руб.)`;
+
   try {
     const response = await ai.chat.completions.create({
       model: MODELS.fast,
       messages: [
-        { role: "system", content: VERIFICATION_SUMMARY_PROMPT },
+        { role: "system", content: summaryPrompt },
         {
           role: "user",
           content: JSON.stringify(summaryData, null, 2),
@@ -228,11 +218,9 @@ export async function generateVerificationResult(
       max_tokens: 600,
     });
 
-    summary =
-      response.choices[0]?.message?.content ||
-      `Смета подрядчика завышена на ${overpayPercent}% (${totalOverpay.toLocaleString("ru-RU")} руб.)`;
+    summary = response.choices[0]?.message?.content || fallbackSummary;
   } catch {
-    summary = `Смета подрядчика завышена на ${overpayPercent}% (${totalOverpay.toLocaleString("ru-RU")} руб.)`;
+    summary = fallbackSummary;
   }
 
   // Auto-recommendations
@@ -241,9 +229,15 @@ export async function generateVerificationResult(
     .sort((a, b) => b.overpay_amount - a.overpay_amount);
 
   for (const item of overpayItems.slice(0, 5)) {
-    recommendations.push(
-      `${item.work}: подрядчик просит ${item.contractor_price} руб/${item.unit}, рыночная цена ${item.market_avg} руб/${item.unit} (переплата ${item.overpay_percent}%)`
-    );
+    if (isUS) {
+      recommendations.push(
+        `${item.work}: contractor charges $${item.contractor_price}/${item.unit}, market rate $${item.market_avg}/${item.unit} (${item.overpay_percent}% overcharge)`
+      );
+    } else {
+      recommendations.push(
+        `${item.work}: подрядчик просит ${item.contractor_price} руб/${item.unit}, рыночная цена ${item.market_avg} руб/${item.unit} (переплата ${item.overpay_percent}%)`
+      );
+    }
   }
 
   return {

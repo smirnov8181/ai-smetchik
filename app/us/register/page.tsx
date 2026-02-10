@@ -20,8 +20,8 @@ export default function USRegisterPage() {
     setLoading(true);
     setError(null);
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
       setLoading(false);
       return;
     }
@@ -124,11 +124,11 @@ export default function USRegisterPage() {
                 <input
                   id="password"
                   type="password"
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full pl-12 pr-4 py-4 rounded-xl border border-[#161616]/10 bg-[#FAF4EC] text-[#161616] placeholder:text-[#161616]/30 focus:outline-none focus:ring-2 focus:ring-[#0D8DFF] focus:border-transparent transition-all"
                 />
               </div>

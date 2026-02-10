@@ -4,7 +4,11 @@ import { EstimateResult } from "@/lib/supabase/types";
  * Escape a value for CSV (handle commas, quotes, newlines)
  */
 function escapeCsvValue(value: string | number): string {
-  const str = String(value);
+  let str = String(value);
+  // Prevent CSV formula injection — prefix dangerous first characters with a single quote
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = "'" + str;
+  }
   // If contains comma, quote, or newline - wrap in quotes and escape internal quotes
   if (str.includes(",") || str.includes('"') || str.includes("\n")) {
     return `"${str.replace(/"/g, '""')}"`;

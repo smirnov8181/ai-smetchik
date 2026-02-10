@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, AlertTriangle, Loader2, Info, TrendingUp, Share2, Check, Link, PieChart, Lightbulb } from "lucide-react";
+import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, Link, PieChart, Lightbulb } from "lucide-react";
 
 interface EstimateResultProps {
   result: EstimateResultType;
@@ -239,13 +239,19 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
   const [activeScenarios, setActiveScenarios] = useState<Set<string>>(new Set());
 
   // Filter applicable "what if" scenarios
-  const applicableScenarios = whatIfScenarios.filter(s => s.condition(result.sections));
+  const applicableScenarios = useMemo(
+    () => whatIfScenarios.filter(s => s.condition(result.sections)),
+    [result.sections]
+  );
 
   // Calculate total impact from active scenarios
-  const scenariosImpact = Array.from(activeScenarios).reduce((sum, id) => {
-    const scenario = whatIfScenarios.find(s => s.id === id);
-    return sum + (scenario ? scenario.impact(result.sections) : 0);
-  }, 0);
+  const scenariosImpact = useMemo(
+    () => Array.from(activeScenarios).reduce((sum, id) => {
+      const scenario = whatIfScenarios.find(s => s.id === id);
+      return sum + (scenario ? scenario.impact(result.sections) : 0);
+    }, 0),
+    [activeScenarios, result.sections]
+  );
 
   const toggleScenario = (id: string) => {
     setActiveScenarios(prev => {
@@ -260,14 +266,21 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
   };
 
   // Recalculate prices based on quality tier + scenarios
-  const tierConfig = qualityTiers[qualityTier];
-  const adjustedMaterials = Math.round(result.subtotal_materials * tierConfig.multiplier);
-  const materialsDiff = adjustedMaterials - result.subtotal_materials;
-  const baseTotal = result.subtotal_labor + adjustedMaterials + result.overhead;
-  const adjustedOverhead = Math.round(baseTotal * 0.1);
-  const totalBeforeScenarios = result.subtotal_labor + adjustedMaterials + adjustedOverhead;
-  const finalTotal = totalBeforeScenarios + scenariosImpact;
-  const totalDiff = finalTotal - result.total; // Total diff from original
+  const { tierConfig, adjustedMaterials, adjustedOverhead, finalTotal, totalDiff } = useMemo(() => {
+    const tc = qualityTiers[qualityTier];
+    const am = Math.round(result.subtotal_materials * tc.multiplier);
+    const bt = result.subtotal_labor + am + result.overhead;
+    const ao = Math.round(bt * 0.1);
+    const tbs = result.subtotal_labor + am + ao;
+    const ft = tbs + scenariosImpact;
+    return {
+      tierConfig: tc,
+      adjustedMaterials: am,
+      adjustedOverhead: ao,
+      finalTotal: ft,
+      totalDiff: ft - result.total,
+    };
+  }, [qualityTier, result, scenariosImpact]);
 
   const handleShare = async () => {
     if (shareToken) {

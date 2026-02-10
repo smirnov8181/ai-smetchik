@@ -1,63 +1,31 @@
-import { WorkItem, PricedWorkItem, PriceCatalogItem } from "@/lib/supabase/types";
+import { WorkItem, PricedWorkItem } from "@/lib/supabase/types";
 import { createServiceClient } from "@/lib/supabase/server";
+import { findCatalogMatch } from "./catalog-match";
 
-// Fuzzy match work name to catalog
-function findBestMatch(
-  workName: string,
-  catalog: PriceCatalogItem[]
-): PriceCatalogItem | null {
-  const normalized = workName.toLowerCase().trim();
-
-  // Exact match
-  const exact = catalog.find(
-    (item) => item.work_name.toLowerCase() === normalized
-  );
-  if (exact) return exact;
-
-  // Partial match — check if catalog name is contained in work name or vice versa
-  const partial = catalog.find(
-    (item) =>
-      normalized.includes(item.work_name.toLowerCase()) ||
-      item.work_name.toLowerCase().includes(normalized)
-  );
-  if (partial) return partial;
-
-  // Word overlap match
-  const workWords = normalized.split(/\s+/);
-  let bestMatch: PriceCatalogItem | null = null;
-  let bestScore = 0;
-
-  for (const item of catalog) {
-    const catalogWords = item.work_name.toLowerCase().split(/\s+/);
-    const overlap = workWords.filter((w) =>
-      catalogWords.some((cw) => cw.includes(w) || w.includes(cw))
-    ).length;
-    const score = overlap / Math.max(workWords.length, catalogWords.length);
-    if (score > bestScore && score >= 0.4) {
-      bestScore = score;
-      bestMatch = item;
-    }
-  }
-
-  return bestMatch;
+function isUSRegion(region: string): boolean {
+  return region === "us_national" || region.startsWith("US-");
 }
 
 export async function calculatePrices(
-  workItems: WorkItem[]
+  workItems: WorkItem[],
+  region: string = "moscow"
 ): Promise<PricedWorkItem[]> {
   const supabase = createServiceClient();
 
+  const table = isUSRegion(region) ? "price_catalog_us" : "price_catalog";
+  const queryRegion = region === "us_national" ? "us_national" : region;
+
   const { data: catalog, error } = await supabase
-    .from("price_catalog")
+    .from(table)
     .select("*")
-    .eq("region", "moscow");
+    .eq("region", queryRegion);
 
   if (error) {
     throw new Error(`Failed to fetch price catalog: ${error.message}`);
   }
 
   return workItems.map((item) => {
-    const catalogItem = findBestMatch(item.work, catalog || []);
+    const catalogItem = findCatalogMatch(item.work, catalog || []);
 
     const pricePerUnit = catalogItem?.price_avg ?? estimateDefaultPrice(item);
     const laborCost = Math.round(pricePerUnit * item.quantity);

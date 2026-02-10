@@ -31,6 +31,27 @@ export async function GET(
     );
   }
 
+  // Strip full result details if not paid (server-side paywall)
+  if (!verification.is_paid && verification.result) {
+    const freePreviewCount = 3;
+    const result = verification.result as { items?: Array<Record<string, unknown>>; recommendations?: string[]; [key: string]: unknown };
+    if (result.items && Array.isArray(result.items)) {
+      const overpayItems = result.items
+        .filter((i: Record<string, unknown>) => i.status !== "ok")
+        .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (b.overpay_amount as number) - (a.overpay_amount as number));
+      const okItems = result.items.filter((i: Record<string, unknown>) => i.status === "ok");
+
+      // Only include free preview items + redacted ok items count
+      const visibleItems = overpayItems.slice(0, freePreviewCount);
+      const hiddenCount = overpayItems.length - freePreviewCount + okItems.length;
+
+      result.items = visibleItems;
+      result.recommendations = [];
+      (result as Record<string, unknown>)._hiddenCount = hiddenCount > 0 ? hiddenCount : 0;
+    }
+    verification.result = result;
+  }
+
   return NextResponse.json({ verification });
 }
 
