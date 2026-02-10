@@ -31,10 +31,10 @@ export async function GET(
 
   // Stale detection: if processing for more than 5 minutes, mark as error
   if (estimate.status === "processing") {
-    const createdAt = new Date(estimate.created_at).getTime();
+    const checkTime = new Date(estimate.updated_at || estimate.created_at).getTime();
     const now = Date.now();
     const STALE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-    if (now - createdAt > STALE_TIMEOUT_MS) {
+    if (now - checkTime > STALE_TIMEOUT_MS) {
       await supabase
         .from("estimates")
         .update({

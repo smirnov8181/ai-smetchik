@@ -46,7 +46,7 @@ export async function POST(
   // Reset to processing
   await supabase
     .from("verifications")
-    .update({ status: "processing", error_message: null })
+    .update({ status: "processing", error_message: null, created_at: new Date().toISOString() })
     .eq("id", id);
 
   const encoder = new TextEncoder();

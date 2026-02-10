@@ -46,7 +46,7 @@ export async function POST(
   // Reset to processing
   await supabase
     .from("estimates")
-    .update({ status: "processing", error_message: null })
+    .update({ status: "processing", error_message: null, created_at: new Date().toISOString() })
     .eq("id", id);
 
   // Re-process via SSE stream
