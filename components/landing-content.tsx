@@ -37,7 +37,7 @@ const stats: { value: number; suffix: string; label: string }[] = [
 
 const steps = [
   { num: "01", icon: Upload, title: "Загрузите", desc: "Текст, фото или PDF — принимаем любой формат", color: "bg-[#FA5424]" },
-  { num: "02", icon: Brain, title: "AI анализ", desc: "Наша модель извлекает работы, площади и материалы", color: "bg-[#0D8DFF]" },
+  { num: "02", icon: Brain, title: "AI анализ", desc: "Модель извлекает работы, площади и материалы", color: "bg-[#0D8DFF]" },
   { num: "03", icon: Table, title: "Расчёт цен", desc: "Сравнение с актуальной базой цен Москвы", color: "bg-[#33C791]" },
   { num: "04", icon: Download, title: "Готово", desc: "Таблица работ с ценами и экспорт в CSV и PDF", color: "bg-[#161616]" },
 ];
