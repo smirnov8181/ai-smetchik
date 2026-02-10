@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
+import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
 
 interface EstimateResultProps {
   result: EstimateResultType & {
@@ -428,227 +428,288 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
         </CardHeader>
 
         <CardContent className="p-6 pt-0 space-y-8">
-          {/* Unified Price Block with Materials Selector */}
-          <div className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700">
-
-            {/* Material Tier Toggle Group */}
-            <div className="mb-6">
-              <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mb-4 font-medium">
-                Уровень материалов
-              </p>
-              <div className="flex justify-center gap-3">
-                {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => {
-                  const isSelected = qualityTier === tier;
-                  return (
-                    <button
-                      key={tier}
-                      onClick={() => setQualityTier(tier)}
-                      className={`
-                        relative flex-1 max-w-[140px] py-3 px-4 rounded-2xl transition-all duration-200
-                        ${isSelected
-                          ? "bg-white dark:bg-slate-800 shadow-lg ring-2 ring-primary/20 border border-primary/30"
-                          : "bg-slate-100/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-transparent"
-                        }
-                      `}
-                    >
-                      <div className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-slate-600 dark:text-slate-300"}`}>
-                        {qualityTiers[tier].label}
-                      </div>
-                      <div className={`text-xs mt-0.5 ${isSelected ? "text-primary/70" : "text-slate-400"}`}>
-                        {formatPrice(tierPrices[tier])} ₽
-                      </div>
-                      {isSelected && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white dark:border-slate-800" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-600 to-transparent mb-6" />
-
-            {/* Main Price Display */}
-            <div className="text-center">
-              <p className="text-xs uppercase tracking-wider text-slate-400 mb-3">
-                Ориентировочная стоимость
-              </p>
-              <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {formatPrice(finalTotal)}
-                </span>
-                <span className="text-2xl font-medium text-slate-400">₽</span>
-              </div>
-
-              {/* Diff indicator */}
-              {totalDiff !== 0 && (
+          {hasPaywall ? (
+            /* FREE VERSION: verdict only, no exact numbers */
+            <>
+              <div className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-3xl p-8 border border-slate-100 dark:border-slate-700 text-center">
+                <p className="text-xs uppercase tracking-wider text-slate-400 mb-4 font-medium">
+                  Оценка стоимости
+                </p>
                 <div className={`
-                  inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-sm font-medium
-                  ${totalDiff > 0
-                    ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
-                    : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                  inline-flex items-center gap-3 px-6 py-4 rounded-2xl text-2xl font-bold
+                  ${result.confidence === "high"
+                    ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : result.confidence === "medium"
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                      : "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                   }
                 `}>
-                  {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)} ₽
+                  {result.confidence === "high" ? (
+                    <><CheckCircle className="h-7 w-7" /> В рамках рынка</>
+                  ) : result.confidence === "medium" ? (
+                    <><Info className="h-7 w-7" /> Средний диапазон</>
+                  ) : (
+                    <><AlertTriangle className="h-7 w-7" /> Требует уточнения</>
+                  )}
                 </div>
-              )}
-
-              {/* Price range */}
-              <p className="text-sm text-slate-400 mt-3">
-                от {formatPrice(minPrice)} до {formatPrice(maxPrice)} ₽
-              </p>
-
-              {activeScenarios.size > 0 && (
-                <p className="text-xs text-slate-400 mt-1">
-                  с учётом {activeScenarios.size} {activeScenarios.size === 1 ? "изменения" : "изменений"}
+                <p className="text-sm text-slate-400 mt-4">
+                  {result.sections.reduce((sum, s) => sum + s.items.length, 0)}{hiddenItems > 0 ? `+${hiddenItems}` : ""} позиций проанализировано
                 </p>
+              </div>
+
+              {/* Blurred price teaser */}
+              <div className="relative">
+                <div className="blur-md pointer-events-none select-none opacity-60">
+                  <div className="flex justify-center gap-3 mb-4">
+                    <div className="py-3 px-4 rounded-2xl bg-slate-100/50 flex-1 max-w-[140px] text-center">
+                      <div className="text-sm font-semibold text-slate-400">Эконом</div>
+                      <div className="text-xs text-slate-300">*** *** ₽</div>
+                    </div>
+                    <div className="py-3 px-4 rounded-2xl bg-white shadow-lg ring-2 ring-primary/20 flex-1 max-w-[140px] text-center">
+                      <div className="text-sm font-semibold text-slate-400">Стандарт</div>
+                      <div className="text-xs text-slate-300">*** *** ₽</div>
+                    </div>
+                    <div className="py-3 px-4 rounded-2xl bg-slate-100/50 flex-1 max-w-[140px] text-center">
+                      <div className="text-sm font-semibold text-slate-400">Комфорт</div>
+                      <div className="text-xs text-slate-300">*** *** ₽</div>
+                    </div>
+                  </div>
+                  <div className="h-4 rounded-full overflow-hidden flex">
+                    <div className="bg-blue-500 w-[70%]" />
+                    <div className="bg-emerald-500 w-[20%]" />
+                    <div className="bg-orange-400 w-[10%]" />
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border">
+                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Lock className="h-4 w-4" />
+                      Точные цены — в полной смете
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* PAID VERSION: full details */
+            <>
+              {/* Unified Price Block with Materials Selector */}
+              <div className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700">
+
+                {/* Material Tier Toggle Group */}
+                <div className="mb-6">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 text-center mb-4 font-medium">
+                    Уровень материалов
+                  </p>
+                  <div className="flex justify-center gap-3">
+                    {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => {
+                      const isSelected = qualityTier === tier;
+                      return (
+                        <button
+                          key={tier}
+                          onClick={() => setQualityTier(tier)}
+                          className={`
+                            relative flex-1 max-w-[140px] py-3 px-4 rounded-2xl transition-all duration-200
+                            ${isSelected
+                              ? "bg-white dark:bg-slate-800 shadow-lg ring-2 ring-primary/20 border border-primary/30"
+                              : "bg-slate-100/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-transparent"
+                            }
+                          `}
+                        >
+                          <div className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-slate-600 dark:text-slate-300"}`}>
+                            {qualityTiers[tier].label}
+                          </div>
+                          <div className={`text-xs mt-0.5 ${isSelected ? "text-primary/70" : "text-slate-400"}`}>
+                            {formatPrice(tierPrices[tier])} ₽
+                          </div>
+                          {isSelected && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white dark:border-slate-800" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-600 to-transparent mb-6" />
+
+                {/* Main Price Display */}
+                <div className="text-center">
+                  <p className="text-xs uppercase tracking-wider text-slate-400 mb-3">
+                    Ориентировочная стоимость
+                  </p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+                      {formatPrice(finalTotal)}
+                    </span>
+                    <span className="text-2xl font-medium text-slate-400">₽</span>
+                  </div>
+
+                  {/* Diff indicator */}
+                  {totalDiff !== 0 && (
+                    <div className={`
+                      inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-sm font-medium
+                      ${totalDiff > 0
+                        ? "bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
+                        : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                      }
+                    `}>
+                      {totalDiff > 0 ? "+" : ""}{formatPrice(totalDiff)} ₽
+                    </div>
+                  )}
+
+                  {/* Price range */}
+                  <p className="text-sm text-slate-400 mt-3">
+                    от {formatPrice(minPrice)} до {formatPrice(maxPrice)} ₽
+                  </p>
+
+                  {activeScenarios.size > 0 && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      с учётом {activeScenarios.size} {activeScenarios.size === 1 ? "изменения" : "изменений"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Recommendation pill */}
+              <div className="flex items-start gap-3 bg-amber-50/80 dark:bg-amber-900/20 rounded-2xl p-4 border border-amber-100 dark:border-amber-800/50">
+                <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center flex-shrink-0">
+                  <Info className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
+                  {tierConfig.recommendation}
+                </p>
+              </div>
+
+              {/* Price structure - visual breakdown */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <PieChart className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-medium text-sm">Из чего складывается цена</p>
+                </div>
+
+                {/* Visual bar */}
+                <div className="h-4 rounded-full overflow-hidden flex mb-3">
+                  <div
+                    className="bg-blue-500 transition-all"
+                    style={{ width: `${laborPercent}%` }}
+                    title={`Работы: ${laborPercent}%`}
+                  />
+                  <div
+                    className="bg-emerald-500 transition-all"
+                    style={{ width: `${materialsPercent}%` }}
+                    title={`Материалы: ${materialsPercent}%`}
+                  />
+                  <div
+                    className="bg-orange-400 transition-all"
+                    style={{ width: `${overheadPercent}%` }}
+                    title={`Накладные: ${overheadPercent}%`}
+                  />
+                </div>
+
+                {/* Legend with values */}
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-muted-foreground">Работы</p>
+                      <p className="font-semibold">{formatPrice(result.subtotal_labor)} ₽</p>
+                      <p className="text-xs text-muted-foreground">{laborPercent}%</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-muted-foreground">Материалы</p>
+                      <p className="font-semibold">{formatPrice(adjustedMaterials)} ₽</p>
+                      <p className="text-xs text-muted-foreground">{materialsPercent}%</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-muted-foreground">Накладные</p>
+                      <p className="font-semibold">{formatPrice(adjustedOverhead)} ₽</p>
+                      <p className="text-xs text-muted-foreground">{overheadPercent}%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Accuracy explanation - human friendly */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-full ${
+                    conf.variant === "default" ? "bg-green-100 text-green-700" :
+                    conf.variant === "secondary" ? "bg-blue-100 text-blue-700" :
+                    "bg-orange-100 text-orange-700"
+                  }`}>
+                    <Info className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{conf.humanExplanation}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{conf.whatItMeans}</p>
+                    <p className="text-sm font-medium mt-2 text-primary">{conf.nextStep}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Caveats */}
+              {result.caveats.length > 0 && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <div className="flex items-center gap-2 font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Обратите внимание
+                  </div>
+                  <ul className="space-y-2 text-sm text-yellow-700 dark:text-yellow-300">
+                    {result.caveats.map((caveat, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-yellow-500 mt-1">•</span>
+                        <span>{caveat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-            </div>
-          </div>
 
-          {/* Recommendation pill */}
-          <div className="flex items-start gap-3 bg-amber-50/80 dark:bg-amber-900/20 rounded-2xl p-4 border border-amber-100 dark:border-amber-800/50">
-            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center flex-shrink-0">
-              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            </div>
-            <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
-              {tierConfig.recommendation}
-            </p>
-          </div>
+              <Separator className="my-4" />
 
-          {/* Price structure - visual breakdown */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <PieChart className="h-4 w-4 text-muted-foreground" />
-              <p className="font-medium text-sm">Из чего складывается цена</p>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                {!isPublic && (
+                  <Button onClick={handleExportCsv} disabled={isExporting}>
+                    {isExporting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    )}
+                    Скачать CSV
+                  </Button>
+                )}
 
-            {/* Visual bar */}
-            <div className="h-4 rounded-full overflow-hidden flex mb-3">
-              <div
-                className="bg-blue-500 transition-all"
-                style={{ width: `${laborPercent}%` }}
-                title={`Работы: ${laborPercent}%`}
-              />
-              <div
-                className="bg-emerald-500 transition-all"
-                style={{ width: `${materialsPercent}%` }}
-                title={`Материалы: ${materialsPercent}%`}
-              />
-              <div
-                className="bg-orange-400 transition-all"
-                style={{ width: `${overheadPercent}%` }}
-                title={`Накладные: ${overheadPercent}%`}
-              />
-            </div>
-
-            {/* Legend with values */}
-            <div className="grid grid-cols-3 gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
-                <div>
-                  <p className="text-muted-foreground">Работы</p>
-                  <p className="font-semibold">{formatPrice(result.subtotal_labor)} ₽</p>
-                  <p className="text-xs text-muted-foreground">{laborPercent}%</p>
-                </div>
+                {!isPublic && (
+                  <Button
+                    variant={shareToken ? "outline" : "secondary"}
+                    onClick={handleShare}
+                    disabled={isSharing}
+                  >
+                    {isSharing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : copied ? (
+                      <Check className="mr-2 h-4 w-4 text-green-600" />
+                    ) : shareToken ? (
+                      <Link className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Share2 className="mr-2 h-4 w-4" />
+                    )}
+                    {copied ? "Ссылка скопирована!" : shareToken ? "Копировать ссылку" : "Поделиться"}
+                  </Button>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0" />
-                <div>
-                  <p className="text-muted-foreground">Материалы</p>
-                  <p className="font-semibold">{formatPrice(adjustedMaterials)} ₽</p>
-                  <p className="text-xs text-muted-foreground">{materialsPercent}%</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-orange-400 flex-shrink-0" />
-                <div>
-                  <p className="text-muted-foreground">Накладные</p>
-                  <p className="font-semibold">{formatPrice(adjustedOverhead)} ₽</p>
-                  <p className="text-xs text-muted-foreground">{overheadPercent}%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Accuracy explanation - human friendly */}
-          <div className="bg-muted/50 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <div className={`p-2 rounded-full ${
-                conf.variant === "default" ? "bg-green-100 text-green-700" :
-                conf.variant === "secondary" ? "bg-blue-100 text-blue-700" :
-                "bg-orange-100 text-orange-700"
-              }`}>
-                <Info className="h-4 w-4" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">{conf.humanExplanation}</p>
-                <p className="text-sm text-muted-foreground mt-1">{conf.whatItMeans}</p>
-                <p className="text-sm font-medium mt-2 text-primary">{conf.nextStep}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Caveats */}
-          {result.caveats.length > 0 && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex items-center gap-2 font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                <AlertTriangle className="h-4 w-4" />
-                Обратите внимание
-              </div>
-              <ul className="space-y-2 text-sm text-yellow-700 dark:text-yellow-300">
-                {result.caveats.map((caveat, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <span className="text-yellow-500 mt-1">•</span>
-                    <span>{caveat}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            </>
           )}
-
-          <Separator className="my-4" />
-
-          <div className="flex flex-wrap gap-2">
-            {!isPublic && (isPaid || !hasPaywall) && (
-              <Button onClick={handleExportCsv} disabled={isExporting}>
-                {isExporting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                )}
-                Скачать CSV
-              </Button>
-            )}
-
-            {!isPublic && (isPaid || !hasPaywall) && (
-              <Button
-                variant={shareToken ? "outline" : "secondary"}
-                onClick={handleShare}
-                disabled={isSharing}
-              >
-                {isSharing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : copied ? (
-                  <Check className="mr-2 h-4 w-4 text-green-600" />
-                ) : shareToken ? (
-                  <Link className="mr-2 h-4 w-4" />
-                ) : (
-                  <Share2 className="mr-2 h-4 w-4" />
-                )}
-                {copied ? "Ссылка скопирована!" : shareToken ? "Копировать ссылку" : "Поделиться"}
-              </Button>
-            )}
-
-            {hasPaywall && (
-              <p className="text-xs text-muted-foreground self-center">
-                Экспорт и шаринг доступны после оплаты
-              </p>
-            )}
-          </div>
         </CardContent>
       </Card>
 

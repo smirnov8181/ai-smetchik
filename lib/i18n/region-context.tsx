@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Region, translations } from "./translations";
 
 type Translations = (typeof translations)[Region];
@@ -16,22 +17,26 @@ interface RegionContextType {
 
 const RegionContext = createContext<RegionContextType | null>(null);
 
+function getRegionFromPath(pathname: string): Region {
+  // If URL starts with /ru, it's the RU region
+  if (pathname.startsWith("/ru")) return "RU";
+  return "US";
+}
+
 export function RegionProvider({ children }: { children: ReactNode }) {
-  const [region, setRegionState] = useState<Region>("RU");
+  const pathname = usePathname();
+  const pathRegion = getRegionFromPath(pathname);
+  const [region, setRegionState] = useState<Region>(pathRegion);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Load from localStorage on mount
-    const saved = localStorage.getItem("region") as Region | null;
-    if (saved && (saved === "RU" || saved === "US")) {
-      setRegionState(saved);
-    }
+    // Sync region with URL path — path is the source of truth
+    setRegionState(pathRegion);
     setMounted(true);
-  }, []);
+  }, [pathRegion]);
 
   const setRegion = (newRegion: Region) => {
     setRegionState(newRegion);
-    localStorage.setItem("region", newRegion);
   };
 
   const t = translations[region];
@@ -47,24 +52,6 @@ export function RegionProvider({ children }: { children: ReactNode }) {
     }
     return new Intl.NumberFormat("ru-RU").format(amount) + " руб.";
   };
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <RegionContext.Provider
-        value={{
-          region: "RU",
-          setRegion,
-          t: translations.RU,
-          formatPrice: (amount) => new Intl.NumberFormat("ru-RU").format(amount) + " руб.",
-          currency: "руб.",
-          currencySymbol: "₽",
-        }}
-      >
-        {children}
-      </RegionContext.Provider>
-    );
-  }
 
   return (
     <RegionContext.Provider

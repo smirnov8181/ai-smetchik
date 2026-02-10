@@ -37,14 +37,14 @@ export async function GET(
 
   const admin = isAdminUser(user.email ?? undefined);
 
-  // Server-side paywall: if not paid and not admin, show only first 50% of sections
+  // Server-side paywall: if not paid and not admin, show only first 30% of sections
   if (!estimate.is_paid && !admin && estimate.result?.sections) {
     const sections = estimate.result.sections as Array<{
       category: string;
       items: Array<Record<string, unknown>>;
       subtotal: number;
     }>;
-    const freeCount = Math.max(1, Math.ceil(sections.length / 2));
+    const freeCount = Math.max(1, Math.ceil(sections.length * 0.3));
     const hiddenSections = sections.slice(freeCount);
     const hiddenItemCount = hiddenSections.reduce(
       (sum, s) => sum + s.items.length,
