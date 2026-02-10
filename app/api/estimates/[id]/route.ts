@@ -34,6 +34,28 @@ export async function GET(
     .select("*")
     .eq("estimate_id", id);
 
+  // Server-side paywall: if not paid, show only first 50% of sections
+  if (!estimate.is_paid && estimate.result?.sections) {
+    const sections = estimate.result.sections as Array<{
+      category: string;
+      items: Array<Record<string, unknown>>;
+      subtotal: number;
+    }>;
+    const freeCount = Math.max(1, Math.ceil(sections.length / 2));
+    const hiddenSections = sections.slice(freeCount);
+    const hiddenItemCount = hiddenSections.reduce(
+      (sum, s) => sum + s.items.length,
+      0
+    );
+
+    estimate.result = {
+      ...estimate.result,
+      sections: sections.slice(0, freeCount),
+      _hiddenSections: sections.length - freeCount,
+      _hiddenItems: hiddenItemCount,
+    };
+  }
+
   return NextResponse.json({ estimate, files: files || [] });
 }
 

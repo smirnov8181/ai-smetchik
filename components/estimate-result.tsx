@@ -13,11 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, Link, PieChart, Lightbulb } from "lucide-react";
+import { FileSpreadsheet, AlertTriangle, Loader2, Info, Share2, Check, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
 
 interface EstimateResultProps {
-  result: EstimateResultType;
+  result: EstimateResultType & {
+    _hiddenSections?: number;
+    _hiddenItems?: number;
+  };
   estimateId: string;
+  isPaid?: boolean;
   shareToken?: string | null;
   isPublic?: boolean; // true when viewing via share link
 }
@@ -230,13 +234,54 @@ function generateHumanSummary(sections: EstimateResultType["sections"]): string 
   return `В смету входят: ${worksList}. Всего ${totalItems} позиций с учётом материалов.`;
 }
 
-export function EstimateResult({ result, estimateId, shareToken: initialShareToken, isPublic = false }: EstimateResultProps) {
+export function EstimateResult({ result, estimateId, isPaid = false, shareToken: initialShareToken, isPublic = false }: EstimateResultProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(initialShareToken || null);
   const [copied, setCopied] = useState(false);
   const [qualityTier, setQualityTier] = useState<QualityTier>("standard");
   const [activeScenarios, setActiveScenarios] = useState<Set<string>>(new Set());
+
+  const hiddenSections = result._hiddenSections || 0;
+  const hiddenItems = result._hiddenItems || 0;
+  const hasPaywall = !isPaid && hiddenSections > 0;
+
+  const handlePay = async () => {
+    setIsPaymentLoading(true);
+    try {
+      const res = await fetch(`/api/estimates/${estimateId}/pay`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (data.already_paid) {
+        window.location.reload();
+        return;
+      }
+
+      if (data.checkout_url) {
+        try {
+          const url = new URL(data.checkout_url);
+          const allowedDomains = ["stripe.com", "yoomoney.ru", "yookassa.ru"];
+          const isAllowed = allowedDomains.some((d) =>
+            url.hostname.endsWith(d)
+          );
+          if (isAllowed) {
+            window.location.href = data.checkout_url;
+          } else {
+            console.error("Invalid checkout URL domain:", url.hostname);
+          }
+        } catch {
+          console.error("Invalid checkout URL");
+        }
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+    } finally {
+      setIsPaymentLoading(false);
+    }
+  };
 
   // Filter applicable "what if" scenarios
   const applicableScenarios = useMemo(
@@ -568,7 +613,7 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
           <Separator className="my-4" />
 
           <div className="flex flex-wrap gap-2">
-            {!isPublic && (
+            {!isPublic && (isPaid || !hasPaywall) && (
               <Button onClick={handleExportCsv} disabled={isExporting}>
                 {isExporting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -579,7 +624,7 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
               </Button>
             )}
 
-            {!isPublic && (
+            {!isPublic && (isPaid || !hasPaywall) && (
               <Button
                 variant={shareToken ? "outline" : "secondary"}
                 onClick={handleShare}
@@ -597,6 +642,12 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
                 {copied ? "Ссылка скопирована!" : shareToken ? "Копировать ссылку" : "Поделиться"}
               </Button>
             )}
+
+            {hasPaywall && (
+              <p className="text-xs text-muted-foreground self-center">
+                Экспорт и шаринг доступны после оплаты
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -605,11 +656,47 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
       <Card>
         <CardHeader>
           <CardTitle>Детализация работ</CardTitle>
+          {hasPaywall && (
+            <CardDescription>
+              Показано {result.sections.length} из {result.sections.length + hiddenSections} разделов
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <EstimateTable sections={result.sections} />
         </CardContent>
       </Card>
+
+      {/* Paywall */}
+      {hasPaywall && (
+        <Card className="border-primary">
+          <CardContent className="py-8 text-center">
+            <Lock className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-bold mb-2">
+              Ещё {hiddenSections} {hiddenSections === 1 ? "раздел" : hiddenSections < 5 ? "раздела" : "разделов"} ({hiddenItems} позиций) скрыто
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Получите полную смету со всеми разделами, экспортом в CSV и симулятором &laquo;А что если...&raquo;
+            </p>
+            <Button
+              size="lg"
+              className="text-lg px-8"
+              onClick={handlePay}
+              disabled={isPaymentLoading}
+            >
+              {isPaymentLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <ShieldCheck className="mr-2 h-5 w-5" />
+              )}
+              Получить полную смету — 490 руб.
+            </Button>
+            <p className="text-xs text-muted-foreground mt-3">
+              Разовый платёж. Безопасная оплата банковской картой.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Total - so user doesn't need to scroll up */}
       <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
@@ -618,7 +705,7 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
             <div>
               <p className="text-sm text-muted-foreground">Итого по смете</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {qualityTiers[qualityTier].label} • {result.sections.reduce((sum, s) => sum + s.items.length, 0)} позиций
+                {qualityTiers[qualityTier].label} • {result.sections.reduce((sum, s) => sum + s.items.length, 0)}{hasPaywall ? `+${hiddenItems}` : ""} позиций
               </p>
             </div>
             <div className="text-right">
@@ -636,8 +723,8 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
         </CardContent>
       </Card>
 
-      {/* What if scenarios - decision simulator */}
-      {applicableScenarios.length > 0 && (
+      {/* What if scenarios - decision simulator (only for paid) */}
+      {!hasPaywall && applicableScenarios.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">

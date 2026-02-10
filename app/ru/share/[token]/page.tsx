@@ -119,6 +119,7 @@ export default function SharedEstimatePage() {
         <EstimateResult
           result={estimate.result}
           estimateId={estimate.id}
+          isPaid={true}
           isPublic={true}
         />
 

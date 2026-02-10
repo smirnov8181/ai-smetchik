@@ -102,7 +102,12 @@ export function VerificationResult({
       if (data.checkout_url) {
         try {
           const url = new URL(data.checkout_url);
-          if (url.hostname.endsWith("stripe.com")) {
+          // Allow Stripe (US) and YooKassa (RU) payment domains
+          const allowedDomains = ["stripe.com", "yoomoney.ru", "yookassa.ru"];
+          const isAllowed = allowedDomains.some((d) =>
+            url.hostname.endsWith(d)
+          );
+          if (isAllowed) {
             window.location.href = data.checkout_url;
           } else {
             console.error("Invalid checkout URL domain:", url.hostname);
@@ -301,7 +306,7 @@ export function VerificationResult({
               Получить полный отчёт — 990 руб.
             </Button>
             <p className="text-xs text-muted-foreground mt-3">
-              Разовый платёж. Оплата через Stripe.
+              Разовый платёж. Безопасная оплата банковской картой.
             </p>
           </CardContent>
         </Card>

@@ -16,6 +16,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import type {
   Estimate,
   EstimateResult as EstimateResultType,
@@ -23,7 +24,9 @@ import type {
 
 export default function EstimateDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
+  const justPaid = searchParams.get("paid") === "true";
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,6 +170,7 @@ export default function EstimateDetailPage() {
         <EstimateResult
           result={estimate.result as EstimateResultType}
           estimateId={estimate.id}
+          isPaid={estimate.is_paid || justPaid}
           shareToken={estimate.share_token}
         />
       )}

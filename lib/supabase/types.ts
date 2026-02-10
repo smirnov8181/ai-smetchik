@@ -8,6 +8,8 @@ export interface Estimate {
   result: EstimateResult | null;
   total_amount: number | null;
   error_message: string | null;
+  is_paid: boolean;
+  payment_intent_id: string | null;
   share_token: string | null;
   region: string;
   created_at: string;

@@ -31,7 +31,7 @@ const steps = [
   { num: "01", icon: Upload, title: "Загрузите", desc: "Текст, фото или PDF — принимаем любой формат", color: "bg-[#FA5424]" },
   { num: "02", icon: Brain, title: "AI анализ", desc: "GPT-4o извлекает работы, площади и материалы", color: "bg-[#0D8DFF]" },
   { num: "03", icon: Table, title: "Расчёт цен", desc: "Сравнение с актуальной базой цен Москвы", color: "bg-[#33C791]" },
-  { num: "04", icon: Download, title: "Готово", desc: "Таблица работ с ценами и экспорт в PDF", color: "bg-[#161616]" },
+  { num: "04", icon: Download, title: "Готово", desc: "Таблица работ с ценами и экспорт в CSV", color: "bg-[#161616]" },
 ];
 
 export function LandingContent() {
@@ -130,8 +130,8 @@ export function LandingContent() {
                   3 сметы бесплатно
                 </span>
                 <span className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#FA5424]" />
-                  Экспорт в PDF
+                 <FileText className="w-4 h-4 text-[#FA5424]" />
+                   Экспорт в CSV
                 </span>
               </div>
             </div>
@@ -292,8 +292,8 @@ export function LandingContent() {
               <div className="w-14 h-14 bg-[#FA5424]/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <FileText className="w-7 h-7 text-[#FA5424]" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Экспорт в PDF</h3>
-              <p className="text-[#161616]/50 leading-relaxed">Скачайте готовую смету в формате PDF для отправки подрядчику или заказчику.</p>
+              <h3 className="text-xl font-bold mb-3">Экспорт в CSV</h3>
+              <p className="text-[#161616]/50 leading-relaxed">Скачайте готовую смету в формате CSV для отправки подрядчику или открытия в Excel.</p>
             </div>
           </div>
         </div>
@@ -304,17 +304,26 @@ export function LandingContent() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-              Тарифы
+              Простая <span className="text-[#33C791]">оплата</span>
             </h2>
+            <p className="text-xl text-[#161616]/50 mt-4 max-w-2xl mx-auto">
+              Никаких подписок. Платите только за то, что вам нужно.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {/* Free */}
-            <div className="p-8 rounded-3xl bg-[#FAF4EC] border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
-              <h3 className="text-xl font-bold mb-2">Free</h3>
-              <div className="text-4xl font-bold mb-1">0 <span className="text-lg font-normal text-[#161616]/50">руб./мес</span></div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Create Estimate */}
+            <div className="p-8 rounded-3xl bg-[#FAF4EC] border-2 border-[#33C791] shadow-lg shadow-[#33C791]/10 hover:-translate-y-2 transition-all duration-300 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#33C791] text-[#161616] font-semibold text-sm px-4 py-1 rounded-full">
+                Превью бесплатно
+              </div>
+              <div className="w-14 h-14 bg-[#33C791]/20 rounded-2xl flex items-center justify-center mb-6">
+                <FileText className="w-7 h-7 text-[#33C791]" />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Создание сметы</h3>
+              <div className="text-4xl font-bold mb-1">490 <span className="text-lg font-normal text-[#161616]/50">руб.</span></div>
               <ul className="space-y-3 my-8">
-                {["3 сметы", "Экспорт в PDF", "Email-поддержка"].map((f, i) => (
+                {["50% разделов — бесплатно", "Полная смета — 490 руб.", "AI анализ за 30 секунд", "Экспорт в CSV и шаринг"].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-[#161616]/70">
                     <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
                     {f}
@@ -322,21 +331,24 @@ export function LandingContent() {
                 ))}
               </ul>
               <Link href="/ru/register">
-                <button className="cursor-pointer w-full bg-[#161616]/10 text-[#161616] font-semibold py-4 rounded-full hover:bg-[#161616]/20 transition-all">
-                  Начать бесплатно
+                <button className="cursor-pointer w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
+                  Попробовать бесплатно
                 </button>
               </Link>
             </div>
 
-            {/* Pro */}
+            {/* Verify Estimate - Paid report */}
             <div className="p-8 rounded-3xl bg-[#FAF4EC] border-2 border-[#0D8DFF] shadow-lg shadow-[#0D8DFF]/10 hover:-translate-y-2 transition-all duration-300 relative">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0D8DFF] text-[#161616] font-semibold text-sm px-4 py-1 rounded-full">
-                Популярный
+                Разовый платёж
               </div>
-              <h3 className="text-xl font-bold mb-2">Pro</h3>
-              <div className="text-4xl font-bold mb-1">990 <span className="text-lg font-normal text-[#161616]/50">руб./мес</span></div>
+              <div className="w-14 h-14 bg-[#0D8DFF]/20 rounded-2xl flex items-center justify-center mb-6">
+                <ShieldCheck className="w-7 h-7 text-[#0D8DFF]" />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Проверка сметы</h3>
+              <div className="text-4xl font-bold mb-1">990 <span className="text-lg font-normal text-[#161616]/50">руб.</span></div>
               <ul className="space-y-3 my-8">
-                {["30 смет/мес", "Экспорт в PDF и Excel", "Приоритетная обработка", "Поддержка в чате"].map((f, i) => (
+                {["Бесплатное превью (3 позиции)", "Полный отчёт по всем позициям", "Процент переплаты и экономия", "Разовая оплата за отчёт"].map((f, i) => (
                   <li key={i} className="flex items-center gap-3 text-[#161616]/70">
                     <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
                     {f}
@@ -345,26 +357,7 @@ export function LandingContent() {
               </ul>
               <Link href="/ru/register">
                 <button className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
-                  Выбрать Pro
-                </button>
-              </Link>
-            </div>
-
-            {/* Business */}
-            <div className="p-8 rounded-3xl bg-[#FAF4EC] border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
-              <h3 className="text-xl font-bold mb-2">Business</h3>
-              <div className="text-4xl font-bold mb-1">2990 <span className="text-lg font-normal text-[#161616]/50">руб./мес</span></div>
-              <ul className="space-y-3 my-8">
-                {["Безлимит смет", "API доступ", "Экспорт в PDF и Excel", "Выделенная поддержка", "Кастомный каталог цен"].map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-[#161616]/70">
-                    <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/ru/register">
-                <button className="cursor-pointer w-full bg-[#161616]/10 text-[#161616] font-semibold py-4 rounded-full hover:bg-[#161616]/20 transition-all">
-                  Выбрать Business
+                  Проверить смету
                 </button>
               </Link>
             </div>
