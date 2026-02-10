@@ -124,13 +124,15 @@ export function VerificationResult({
     }
   };
 
+  const items = result.items ?? [];
+
   const { overpayItems, okItems } = useMemo(() => {
-    const overpay = [...result.items]
+    const overpay = [...items]
       .filter((i) => i.status !== "ok")
-      .sort((a, b) => b.overpay_amount - a.overpay_amount);
-    const ok = result.items.filter((i) => i.status === "ok");
+      .sort((a, b) => (b.overpay_amount || 0) - (a.overpay_amount || 0));
+    const ok = items.filter((i) => i.status === "ok");
     return { overpayItems: overpay, okItems: ok };
-  }, [result.items]);
+  }, [items]);
 
   const hasPaywall = !isPaid;
 
@@ -151,7 +153,7 @@ export function VerificationResult({
               <div>
                 <CardTitle className={verdict.color}>{verdict.label}</CardTitle>
                 <CardDescription>
-                  Проверено {result.items.length} позиций
+                  Проверено {items.length} позиций
                 </CardDescription>
               </div>
             </div>
@@ -222,7 +224,7 @@ export function VerificationResult({
                 <div>
                   <p className="text-sm text-muted-foreground">Завышенных позиций</p>
                   <p className="text-lg font-semibold">
-                    {overpayItems.length} из {result.items.length}
+                    {overpayItems.length} из {items.length}
                   </p>
                 </div>
               </div>
