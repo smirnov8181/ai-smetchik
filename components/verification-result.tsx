@@ -397,9 +397,6 @@ export function VerificationResult({
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span>{group.items.length} позиций</span>
-            {showMarket && group.subtotalOverpay > 0 && (
-              <span className="font-medium">+{formatPrice(group.subtotalOverpay)} руб.</span>
-            )}
           </div>
         </button>
 

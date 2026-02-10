@@ -1,4 +1,5 @@
 import { LandingContent } from "@/components/landing-content";
+import { FooterRu } from "@/components/footer-ru";
 
 export const metadata = {
   title: "AI Сметчик — Смета на ремонт за 2 минуты",
@@ -11,5 +12,10 @@ export const metadata = {
 };
 
 export default function RUPage() {
-  return <LandingContent />;
+  return (
+    <>
+      <LandingContent />
+      <FooterRu />
+    </>
+  );
 }

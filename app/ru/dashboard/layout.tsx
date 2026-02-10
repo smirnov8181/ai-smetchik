@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { FooterRu } from "@/components/footer-ru";
 
 async function handleLogout() {
   "use server";
@@ -24,9 +25,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF4EC]">
+    <div className="min-h-screen bg-[#FAF4EC] flex flex-col">
       <DashboardHeader onLogout={handleLogout} />
-      <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
+      <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">{children}</main>
+      <FooterRu />
     </div>
   );
 }

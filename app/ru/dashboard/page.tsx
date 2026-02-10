@@ -58,7 +58,7 @@ export default async function DashboardPage() {
       {/* Stats */}
       <AnimatedStatsGrid>
         <AnimatedStatCard>
-          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
+          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5 h-full">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#0D8DFF]/10 rounded-xl flex items-center justify-center">
                 <FileText className="w-5 h-5 text-[#0D8DFF]" />
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         </AnimatedStatCard>
 
         <AnimatedStatCard>
-          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
+          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5 h-full">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#33C791]/10 rounded-xl flex items-center justify-center">
                 <ShieldCheck className="w-5 h-5 text-[#33C791]" />
@@ -82,7 +82,7 @@ export default async function DashboardPage() {
         </AnimatedStatCard>
 
         <AnimatedStatCard>
-          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5">
+          <div className="bg-white rounded-3xl p-6 border border-[#161616]/5 h-full">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#FA5424]/10 rounded-xl flex items-center justify-center">
                 <ShieldCheck className="w-5 h-5 text-[#FA5424]" />

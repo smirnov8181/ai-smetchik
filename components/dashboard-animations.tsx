@@ -6,14 +6,14 @@ import { FadeIn, StaggerContainer, StaggerItem, ScaleIn } from "@/components/ui/
 /* Animated wrapper for dashboard stat cards grid */
 export function AnimatedStatsGrid({ children }: { children: ReactNode }) {
   return (
-    <StaggerContainer className="grid md:grid-cols-3 gap-4" staggerDelay={0.1}>
+    <StaggerContainer className="grid md:grid-cols-3 gap-4 items-stretch" staggerDelay={0.1}>
       {children}
     </StaggerContainer>
   );
 }
 
 export function AnimatedStatCard({ children }: { children: ReactNode }) {
-  return <StaggerItem>{children}</StaggerItem>;
+  return <StaggerItem className="h-full">{children}</StaggerItem>;
 }
 
 /* Animated wrapper for section heading + button row */
