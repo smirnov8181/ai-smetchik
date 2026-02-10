@@ -13,7 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FileUpload } from "@/components/file-upload";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export function EstimateForm() {
@@ -173,6 +174,19 @@ export function EstimateForm() {
               {error}
             </div>
           )}
+
+          <Link
+            href="/ru/dashboard/verify/new"
+            className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border/50 hover:bg-muted transition-colors"
+          >
+            <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <span className="font-medium">Уже есть смета от подрядчика?</span>
+              <span className="text-muted-foreground"> Загрузите её в </span>
+              <span className="font-medium text-primary">Проверку сметы</span>
+              <span className="text-muted-foreground"> — мы найдём завышенные позиции.</span>
+            </div>
+          </Link>
 
           <Button
             type="submit"
