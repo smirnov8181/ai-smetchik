@@ -12,7 +12,13 @@ import {
 } from "@/lib/ai/verifier";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
 import { parseContractorXlsx, isXlsxBuffer } from "@/lib/utils/xlsx-parser";
-import { validateFiles, sanitizeFileName } from "@/lib/utils/file-validation";
+
+interface UploadedFile {
+  path: string;
+  name: string;
+  type: string;
+  size: number;
+}
 
 // GET /api/verify — list user's verifications
 export async function GET(request: NextRequest) {
@@ -58,27 +64,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const formData = await request.formData();
-    const text = formData.get("text") as string | null;
-    const files = formData.getAll("files") as File[];
-    const region = (formData.get("region") as string | null) || "moscow";
-
-    // Validate files
-    const fileError = validateFiles(files);
-    if (fileError) {
-      return NextResponse.json({ error: fileError }, { status: 400 });
-    }
+    // Accept JSON body with file paths (files already uploaded to Storage by client)
+    const body = await request.json();
+    const text: string | null = body.text || null;
+    const filePaths: UploadedFile[] = body.filePaths || [];
+    const region: string = body.region || "moscow";
 
     let inputType: "text" | "pdf" | "photo" | "mixed" | "xlsx" = "text";
-    if (files.length > 0 && text) inputType = "mixed";
-    else if (files.length > 0) {
-      const hasImages = files.some((f) => f.type.startsWith("image/"));
-      const hasPdfs = files.some((f) => f.type === "application/pdf");
-      const hasXlsx = files.some((f) =>
+    if (filePaths.length > 0 && text) inputType = "mixed";
+    else if (filePaths.length > 0) {
+      const hasImages = filePaths.some((f) => f.type.startsWith("image/"));
+      const hasPdfs = filePaths.some((f) => f.type === "application/pdf");
+      const hasXlsx = filePaths.some((f) =>
         f.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
         f.name.endsWith(".xlsx")
       );
-      if (hasXlsx && files.length === 1) inputType = "xlsx";
+      if (hasXlsx && filePaths.length === 1) inputType = "xlsx";
       else if (hasImages && hasPdfs) inputType = "mixed";
       else if (hasImages) inputType = "photo";
       else if (hasPdfs) inputType = "pdf";
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
             verification.id,
             user.id,
             text,
-            files,
+            filePaths,
             serviceClient,
             region
           );
@@ -157,7 +158,7 @@ async function processVerification(
   verificationId: string,
   userId: string,
   text: string | null,
-  files: File[],
+  filePaths: UploadedFile[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   region: string = "moscow"
@@ -167,29 +168,34 @@ async function processVerification(
   };
 
   try {
-    log("START", { filesCount: files.length, hasText: !!text });
+    log("START", { filesCount: filePaths.length, hasText: !!text });
 
     let pdfText = "";
     const imageUrls: string[] = [];
     let xlsxParsedItems: Awaited<ReturnType<typeof parseContractorXlsx>> | null = null;
 
-    for (const file of files) {
-      log(`Processing file: ${file.name}`, { type: file.type, size: file.size });
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const safeName = sanitizeFileName(file.name);
-      const fileName = `${userId}/${verificationId}/${safeName}`;
+    for (const fileInfo of filePaths) {
+      log(`Processing file: ${fileInfo.name}`, { type: fileInfo.type, size: fileInfo.size });
 
-      await supabase.storage
+      // Download file from Supabase Storage
+      const { data: fileData, error: downloadError } = await supabase.storage
         .from("estimate-files")
-        .upload(fileName, buffer, { contentType: file.type });
+        .download(fileInfo.path);
+
+      if (downloadError || !fileData) {
+        log(`Download error for ${fileInfo.name}:`, downloadError?.message);
+        continue;
+      }
+
+      const buffer = Buffer.from(await fileData.arrayBuffer());
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from("estimate-files").getPublicUrl(fileName);
+      } = supabase.storage.from("estimate-files").getPublicUrl(fileInfo.path);
 
       // Handle XLSX files - direct parsing without AI
-      const isXlsx = file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-                     file.name.endsWith(".xlsx") ||
+      const isXlsx = fileInfo.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                     fileInfo.name.endsWith(".xlsx") ||
                      isXlsxBuffer(buffer);
 
       if (isXlsx) {
@@ -198,24 +204,24 @@ async function processVerification(
           verification_id: verificationId,
           file_url: publicUrl,
           file_type: "xlsx",
-          original_name: file.name,
+          original_name: fileInfo.name,
         });
-      } else if (file.type === "application/pdf") {
+      } else if (fileInfo.type === "application/pdf") {
         pdfText += await parsePdfBuffer(buffer);
         await supabase.from("verification_files").insert({
           verification_id: verificationId,
           file_url: publicUrl,
           file_type: "pdf",
-          original_name: file.name,
+          original_name: fileInfo.name,
         });
-      } else if (file.type.startsWith("image/")) {
+      } else if (fileInfo.type.startsWith("image/")) {
         const base64 = buffer.toString("base64");
-        imageUrls.push(`data:${file.type};base64,${base64}`);
+        imageUrls.push(`data:${fileInfo.type};base64,${base64}`);
         await supabase.from("verification_files").insert({
           verification_id: verificationId,
           file_url: publicUrl,
           file_type: "image",
-          original_name: file.name,
+          original_name: fileInfo.name,
         });
       }
     }

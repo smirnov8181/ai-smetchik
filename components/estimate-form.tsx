@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/card";
 import { FileUpload } from "@/components/file-upload";
 import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export function EstimateForm() {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -34,23 +36,56 @@ export function EstimateForm() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      if (text.trim()) {
-        formData.append("text", text.trim());
+      // Step 1: Upload files directly to Supabase Storage (bypass Vercel payload limit)
+      const filePaths: { path: string; name: string; type: string; size: number }[] = [];
+
+      if (files.length > 0) {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Не авторизован");
+
+        const tempId = crypto.randomUUID();
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          setUploadProgress(`Загрузка файла ${i + 1} из ${files.length}...`);
+
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const storagePath = `${user.id}/${tempId}/${safeName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("estimate-files")
+            .upload(storagePath, file, { contentType: file.type });
+
+          if (uploadError) {
+            throw new Error(`Ошибка загрузки файла ${file.name}: ${uploadError.message}`);
+          }
+
+          filePaths.push({
+            path: storagePath,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          });
+        }
       }
-      for (const file of files) {
-        formData.append("files", file);
-      }
-      formData.append("region", "moscow");
+
+      // Step 2: Send lightweight JSON request (no files in body)
+      setUploadProgress("AI анализирует...");
 
       const response = await fetch("/api/estimates", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text.trim() || null,
+          filePaths,
+          region: "moscow",
+        }),
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Ошибка сервера");
+        const errText = await response.text();
+        throw new Error(errText || "Ошибка сервера");
       }
 
       // Handle streaming response (SSE)
@@ -66,8 +101,8 @@ export function EstimateForm() {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const text = decoder.decode(value);
-        const lines = text.split("\n");
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
@@ -95,6 +130,7 @@ export function EstimateForm() {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsSubmitting(false);
+      setUploadProgress("");
     }
   };
 
@@ -140,7 +176,7 @@ export function EstimateForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                AI анализирует... (30-60 сек)
+                {uploadProgress || "AI анализирует... (30-60 сек)"}
               </>
             ) : (
               "Рассчитать смету"

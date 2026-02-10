@@ -11,7 +11,13 @@ import { extractWorkItems } from "@/lib/ai/extractor";
 import { calculatePrices } from "@/lib/ai/calculator";
 import { generateEstimate } from "@/lib/ai/generator";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
-import { validateFiles, sanitizeFileName } from "@/lib/utils/file-validation";
+
+interface UploadedFile {
+  path: string;
+  name: string;
+  type: string;
+  size: number;
+}
 
 // GET /api/estimates — list user's estimates
 export async function GET(request: NextRequest) {
@@ -75,23 +81,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const formData = await request.formData();
-    const text = formData.get("text") as string | null;
-    const files = formData.getAll("files") as File[];
-    const region = (formData.get("region") as string | null) || "moscow";
-
-    // Validate files
-    const fileError = validateFiles(files);
-    if (fileError) {
-      return NextResponse.json({ error: fileError }, { status: 400 });
-    }
+    // Accept JSON body with file paths (files already uploaded to Storage by client)
+    const body = await request.json();
+    const text: string | null = body.text || null;
+    const filePaths: UploadedFile[] = body.filePaths || [];
+    const region: string = body.region || "moscow";
 
     // Determine input type
     let inputType: "text" | "pdf" | "photo" | "mixed" = "text";
-    if (files.length > 0 && text) inputType = "mixed";
-    else if (files.length > 0) {
-      const hasImages = files.some((f) => f.type.startsWith("image/"));
-      const hasPdfs = files.some((f) => f.type === "application/pdf");
+    if (filePaths.length > 0 && text) inputType = "mixed";
+    else if (filePaths.length > 0) {
+      const hasImages = filePaths.some((f) => f.type.startsWith("image/"));
+      const hasPdfs = filePaths.some((f) => f.type === "application/pdf");
       if (hasImages && hasPdfs) inputType = "mixed";
       else if (hasImages) inputType = "photo";
       else inputType = "pdf";
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`data: {"status":"processing"}\n\n`));
           }, 5000);
 
-          await processEstimate(estimate.id, user.id, text, files, serviceClient, region);
+          await processEstimate(estimate.id, user.id, text, filePaths, serviceClient, region);
 
           clearInterval(heartbeat);
           controller.enqueue(encoder.encode(`data: {"status":"ready","id":"${estimate.id}"}\n\n`));
@@ -163,7 +164,7 @@ async function processEstimate(
   estimateId: string,
   userId: string,
   text: string | null,
-  files: File[],
+  filePaths: UploadedFile[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   region: string = "moscow"
@@ -173,41 +174,40 @@ async function processEstimate(
   };
 
   try {
-    log("START", { filesCount: files.length, hasText: !!text });
+    log("START", { filesCount: filePaths.length, hasText: !!text });
 
-    // Process files
+    // Process files — download from Supabase Storage
     let pdfText = "";
     const imageUrls: string[] = [];
 
-    for (const file of files) {
-      log(`Processing file: ${file.name}`, { type: file.type, size: file.size });
+    for (const fileInfo of filePaths) {
+      log(`Processing file: ${fileInfo.name}`, { type: fileInfo.type, size: fileInfo.size });
 
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        log(`File too large, skipping: ${file.name}`);
+      // Check file size (max 20MB per file)
+      if (fileInfo.size > 20 * 1024 * 1024) {
+        log(`File too large, skipping: ${fileInfo.name}`);
         continue;
       }
 
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const safeName = sanitizeFileName(file.name);
-      const fileName = `${userId}/${estimateId}/${safeName}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
+      // Download file from Supabase Storage
+      const { data: fileData, error: downloadError } = await supabase.storage
         .from("estimate-files")
-        .upload(fileName, buffer, { contentType: file.type });
+        .download(fileInfo.path);
 
-      if (uploadError) {
-        log(`Upload error for ${file.name}:`, uploadError.message);
-        // Continue processing even if upload fails
+      if (downloadError || !fileData) {
+        log(`Download error for ${fileInfo.name}:`, downloadError?.message);
+        continue;
       }
 
+      const buffer = Buffer.from(await fileData.arrayBuffer());
+
+      // Get public URL for DB record
       const {
         data: { publicUrl },
-      } = supabase.storage.from("estimate-files").getPublicUrl(fileName);
+      } = supabase.storage.from("estimate-files").getPublicUrl(fileInfo.path);
 
-      if (file.type === "application/pdf") {
-        log(`Parsing PDF: ${file.name}`);
+      if (fileInfo.type === "application/pdf") {
+        log(`Parsing PDF: ${fileInfo.name}`);
         try {
           const extractedText = await parsePdfBuffer(buffer);
           log(`PDF text extracted`, { length: extractedText.length });
@@ -231,19 +231,19 @@ async function processEstimate(
           estimate_id: estimateId,
           file_url: publicUrl,
           file_type: "pdf",
-          original_name: file.name,
+          original_name: fileInfo.name,
         });
-      } else if (file.type.startsWith("image/")) {
-        log(`Processing image: ${file.name}`);
+      } else if (fileInfo.type.startsWith("image/")) {
+        log(`Processing image: ${fileInfo.name}`);
         const base64 = buffer.toString("base64");
-        const dataUrl = `data:${file.type};base64,${base64}`;
+        const dataUrl = `data:${fileInfo.type};base64,${base64}`;
         imageUrls.push(dataUrl);
 
         await supabase.from("estimate_files").insert({
           estimate_id: estimateId,
           file_url: publicUrl,
           file_type: "image",
-          original_name: file.name,
+          original_name: fileInfo.name,
         });
       }
     }
