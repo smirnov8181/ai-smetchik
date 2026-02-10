@@ -158,29 +158,39 @@ export function LandingContent() {
             <FadeIn delay={0.4} direction="right">
               <FloatingCard className="relative">
                 <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-[#161616]/10 border border-[#161616]/5">
-                  <div className="text-xs font-semibold text-[#161616]/40 uppercase tracking-wider mb-6">
-                    Пример анализа
-                  </div>
+                  <FadeIn delay={0.6} direction="none">
+                    <div className="text-xs font-semibold text-[#161616]/40 uppercase tracking-wider mb-6">
+                      Пример анализа
+                    </div>
+                  </FadeIn>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-[#33C791]/10 border border-[#33C791]/20">
-                      <span className="font-medium">Штукатурка стен</span>
-                      <span className="text-[#33C791] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" /> 550 руб/м²
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-[#FA5424]/10 border border-[#FA5424]/20">
-                      <span className="font-medium">Укладка плитки</span>
-                      <span className="text-[#FA5424] font-semibold">+40% переплата</span>
-                    </div>
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
-                      <span className="font-medium">Демонтаж обоев</span>
-                      <span className="text-red-500 font-semibold">+316% переплата</span>
-                    </div>
+                    <FadeIn delay={0.8} direction="left">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-[#33C791]/10 border border-[#33C791]/20">
+                        <span className="font-medium">Штукатурка стен</span>
+                        <span className="text-[#33C791] font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" /> <CountUp value={550} duration={1.5} /> руб/м²
+                        </span>
+                      </div>
+                    </FadeIn>
+                    <FadeIn delay={1.0} direction="left">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-[#FA5424]/10 border border-[#FA5424]/20">
+                        <span className="font-medium">Укладка плитки</span>
+                        <span className="text-[#FA5424] font-semibold">+<CountUp value={40} duration={1.2} />% переплата</span>
+                      </div>
+                    </FadeIn>
+                    <FadeIn delay={1.2} direction="left">
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
+                        <span className="font-medium">Демонтаж обоев</span>
+                        <span className="text-red-500 font-semibold">+<CountUp value={316} duration={1.5} />% переплата</span>
+                      </div>
+                    </FadeIn>
                   </div>
-                  <div className="mt-6 pt-6 border-t border-[#161616]/10 flex justify-between items-center">
-                    <span className="text-[#161616]/50">Переплата</span>
-                    <span className="text-3xl font-bold text-red-500">~120 000 руб.</span>
-                  </div>
+                  <FadeIn delay={1.4} direction="up">
+                    <div className="mt-6 pt-6 border-t border-[#161616]/10 flex justify-between items-center">
+                      <span className="text-[#161616]/50">Переплата</span>
+                      <span className="text-3xl font-bold text-red-500">~<CountUp value={120000} duration={2} format="locale" /> руб.</span>
+                    </div>
+                  </FadeIn>
                 </div>
                 {/* Decorative elements */}
                 <div className="absolute -z-10 top-8 -right-8 w-full h-full bg-[#0D8DFF]/20 rounded-3xl" />

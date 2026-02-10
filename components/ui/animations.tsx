@@ -145,6 +145,8 @@ interface CountUpProps {
   prefix?: string;
   duration?: number;
   className?: string;
+  /** "compact" = 120K, "locale" = 120 000, "raw" = 120000 */
+  format?: "compact" | "locale" | "raw";
 }
 
 export function CountUp({
@@ -153,6 +155,7 @@ export function CountUp({
   prefix = "",
   duration = 2,
   className,
+  format = "compact",
 }: CountUpProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.5 });
@@ -172,14 +175,16 @@ export function CountUp({
   useEffect(() => {
     const unsubscribe = springValue.on("change", (latest) => {
       const rounded = Math.round(latest);
-      if (rounded >= 1000) {
+      if (format === "locale") {
+        setDisplayValue(rounded.toLocaleString("ru-RU"));
+      } else if (format === "compact" && rounded >= 1000) {
         setDisplayValue(Math.round(rounded / 1000) + "K");
       } else {
         setDisplayValue(String(rounded));
       }
     });
     return unsubscribe;
-  }, [springValue]);
+  }, [springValue, format]);
 
   return (
     <span ref={ref} className={className}>
