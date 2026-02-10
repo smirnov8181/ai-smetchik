@@ -111,7 +111,7 @@ export default async function DashboardPage() {
             <Link href="/ru/dashboard/estimates/new">
               <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
                 <Plus className="w-5 h-5" />
-                Новая смета
+                Создать смету
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>

@@ -21,18 +21,6 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
           <span className="font-bold text-xl text-[#161616]">{t.appName}</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/ru/dashboard/estimates/new">
-            <button className="cursor-pointer flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.newEstimate}</span>
-            </button>
-          </Link>
-          <Link href="/ru/dashboard/verify/new">
-            <button className="cursor-pointer flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">{t.verifyEstimate}</span>
-            </button>
-          </Link>
           <form action={onLogout}>
             <button
               type="submit"
