@@ -540,7 +540,7 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                 </p>
               </div>
 
-              {/* Blurred price teaser */}
+              {/* Blurred price teaser + CTA */}
               <div className="relative">
                 <div className="blur-md pointer-events-none select-none opacity-60">
                   <div className="flex justify-center gap-3 mb-4">
@@ -563,13 +563,26 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                     <div className="bg-orange-400 w-[10%]" />
                   </div>
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                   <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border">
                     <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Точные цены — в полной смете
                     </p>
                   </div>
+                  <Button
+                    size="lg"
+                    className="text-base px-8 shadow-lg"
+                    onClick={handlePay}
+                    disabled={isPaymentLoading}
+                  >
+                    {isPaymentLoading ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="mr-2 h-5 w-5" />
+                    )}
+                    Открыть полную смету — 490 руб.
+                  </Button>
                 </div>
               </div>
             </>
