@@ -37,9 +37,9 @@ const stats: { value: number; suffix: string; label: string }[] = [
 
 const steps = [
   { num: "01", icon: Upload, title: "Загрузите", desc: "Текст, фото или PDF — принимаем любой формат", color: "bg-[#FA5424]" },
-  { num: "02", icon: Brain, title: "AI анализ", desc: "GPT-4o извлекает работы, площади и материалы", color: "bg-[#0D8DFF]" },
+  { num: "02", icon: Brain, title: "AI анализ", desc: "Наша модель извлекает работы, площади и материалы", color: "bg-[#0D8DFF]" },
   { num: "03", icon: Table, title: "Расчёт цен", desc: "Сравнение с актуальной базой цен Москвы", color: "bg-[#33C791]" },
-  { num: "04", icon: Download, title: "Готово", desc: "Таблица работ с ценами и экспорт в CSV", color: "bg-[#161616]" },
+  { num: "04", icon: Download, title: "Готово", desc: "Таблица работ с ценами и экспорт в CSV и PDF", color: "bg-[#161616]" },
 ];
 
 export function LandingContent() {
@@ -148,7 +148,7 @@ export function LandingContent() {
                   </span>
                   <span className="flex items-center gap-2">
                    <FileText className="w-4 h-4 text-[#FA5424]" />
-                     Экспорт в CSV
+                     Экспорт в CSV и PDF
                   </span>
                 </div>
               </FadeIn>
@@ -337,8 +337,8 @@ export function LandingContent() {
                 <div className="w-14 h-14 bg-[#FA5424]/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <FileText className="w-7 h-7 text-[#FA5424]" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Экспорт в CSV</h3>
-                <p className="text-[#161616]/50 leading-relaxed">Скачайте готовую смету в формате CSV для отправки подрядчику или открытия в Excel.</p>
+                <h3 className="text-xl font-bold mb-3">Экспорт в CSV и PDF</h3>
+                <p className="text-[#161616]/50 leading-relaxed">Скачайте готовую смету в формате CSV или PDF для отправки подрядчику или открытия в Excel.</p>
               </div>
             </StaggerItem>
           </StaggerContainer>
