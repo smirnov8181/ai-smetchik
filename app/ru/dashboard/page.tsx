@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Plus, FileText, ShieldCheck, ArrowRight } from "lucide-react";
+import { Plus, ShieldCheck, ArrowRight, FileText } from "lucide-react";
 import { EstimateCard } from "@/components/estimate-card";
 import { VerificationCard } from "@/components/verification-card";
 import {
@@ -32,7 +32,17 @@ export default async function DashboardPage() {
     .eq("region", "moscow")
     .order("created_at", { ascending: false });
 
-  // Calculate stats
+  // Merge and sort by date
+  type FeedItem =
+    | { type: "estimate"; data: NonNullable<typeof estimates>[number]; date: string }
+    | { type: "verification"; data: NonNullable<typeof verifications>[number]; date: string };
+
+  const feed: FeedItem[] = [
+    ...(estimates ?? []).map((e) => ({ type: "estimate" as const, data: e, date: e.created_at })),
+    ...(verifications ?? []).map((v) => ({ type: "verification" as const, data: v, date: v.created_at })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Stats
   const estimateCount = estimates?.length ?? 0;
   const verificationCount = verifications?.length ?? 0;
   const totalOverpayFound = (verifications ?? [])
@@ -81,7 +91,7 @@ export default async function DashboardPage() {
             </div>
             <p className="text-2xl font-bold text-[#161616]">
               {totalOverpayFound > 0
-                ? `${totalOverpayFound.toLocaleString("ru-RU")} \u0440\u0443\u0431.`
+                ? `${totalOverpayFound.toLocaleString("ru-RU")} руб.`
                 : "\u2014"}
             </p>
             {maxOverpayPercent > 0 && (
@@ -93,11 +103,11 @@ export default async function DashboardPage() {
         </AnimatedStatCard>
       </AnimatedStatsGrid>
 
-      {/* Estimates list */}
-      <div>
-        <AnimatedSectionHeader>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#161616]">Мои сметы</h2>
+      {/* Action buttons */}
+      <AnimatedSectionHeader>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-[#161616]">Мои документы</h2>
+          <div className="flex items-center gap-3">
             <Link href="/ru/dashboard/estimates/new">
               <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
                 <Plus className="w-5 h-5" />
@@ -105,42 +115,6 @@ export default async function DashboardPage() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-          </div>
-        </AnimatedSectionHeader>
-
-        {!estimates || estimates.length === 0 ? (
-          <AnimatedEmptyState>
-            <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
-              <div className="w-16 h-16 bg-[#0D8DFF]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-8 h-8 text-[#0D8DFF]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#161616] mb-2">Пока нет смет</h3>
-              <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
-                Создайте первую смету — опишите проект или загрузите файлы
-              </p>
-              <Link href="/ru/dashboard/estimates/new">
-                <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                  Создать смету
-                </button>
-              </Link>
-            </div>
-          </AnimatedEmptyState>
-        ) : (
-          <AnimatedCardList>
-            {estimates.map((estimate) => (
-              <AnimatedCardItem key={estimate.id}>
-                <EstimateCard estimate={estimate} />
-              </AnimatedCardItem>
-            ))}
-          </AnimatedCardList>
-        )}
-      </div>
-
-      {/* Verifications list */}
-      <div>
-        <AnimatedSectionHeader>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#161616]">Проверки смет</h2>
             <Link href="/ru/dashboard/verify/new">
               <button className="cursor-pointer group flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
                 <ShieldCheck className="w-5 h-5" />
@@ -149,35 +123,52 @@ export default async function DashboardPage() {
               </button>
             </Link>
           </div>
-        </AnimatedSectionHeader>
+        </div>
+      </AnimatedSectionHeader>
 
-        {!verifications || verifications.length === 0 ? (
-          <AnimatedEmptyState>
-            <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
-              <div className="w-16 h-16 bg-[#33C791]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+      {/* Unified feed */}
+      {feed.length === 0 ? (
+        <AnimatedEmptyState>
+          <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <div className="w-16 h-16 bg-[#0D8DFF]/10 rounded-full flex items-center justify-center">
+                <FileText className="w-8 h-8 text-[#0D8DFF]" />
+              </div>
+              <div className="w-16 h-16 bg-[#33C791]/10 rounded-full flex items-center justify-center">
                 <ShieldCheck className="w-8 h-8 text-[#33C791]" />
               </div>
-              <h3 className="text-xl font-bold text-[#161616] mb-2">Нет проверок</h3>
-              <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
-                Загрузите смету подрядчика — узнайте, не завышены ли цены
-              </p>
+            </div>
+            <h3 className="text-xl font-bold text-[#161616] mb-2">Начните работу</h3>
+            <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
+              Создайте смету ремонта или проверьте смету подрядчика на завышенные цены
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <Link href="/ru/dashboard/estimates/new">
+                <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
+                  Создать смету
+                </button>
+              </Link>
               <Link href="/ru/dashboard/verify/new">
                 <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
                   Проверить смету
                 </button>
               </Link>
             </div>
-          </AnimatedEmptyState>
-        ) : (
-          <AnimatedCardList>
-            {verifications.map((v) => (
-              <AnimatedCardItem key={v.id}>
-                <VerificationCard verification={v} />
-              </AnimatedCardItem>
-            ))}
-          </AnimatedCardList>
-        )}
-      </div>
+          </div>
+        </AnimatedEmptyState>
+      ) : (
+        <AnimatedCardList>
+          {feed.map((item) => (
+            <AnimatedCardItem key={`${item.type}-${item.data.id}`}>
+              {item.type === "estimate" ? (
+                <EstimateCard estimate={item.data} />
+              ) : (
+                <VerificationCard verification={item.data} />
+              )}
+            </AnimatedCardItem>
+          ))}
+        </AnimatedCardList>
+      )}
     </div>
   );
 }

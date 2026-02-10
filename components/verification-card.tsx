@@ -62,9 +62,11 @@ export function VerificationCard({ verification }: VerificationCardProps) {
         <CardContent className="flex items-center justify-between py-4">
           <div className="flex-1 min-w-0">
             <p className="font-medium flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-              Проверка от{" "}
-              {new Date(verification.created_at).toLocaleDateString("ru-RU")}
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#33C791] bg-[#33C791]/10 px-2 py-0.5 rounded-full shrink-0">
+                <ShieldCheck className="h-3 w-3" />
+                Проверка
+              </span>
+              от {new Date(verification.created_at).toLocaleDateString("ru-RU")}
             </p>
             <p className="text-sm text-muted-foreground">
               {verification.total_contractor

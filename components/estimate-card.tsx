@@ -60,9 +60,10 @@ export function EstimateCard({ estimate }: EstimateCardProps) {
       <Card className="hover:bg-muted/50 transition-colors cursor-pointer group">
         <CardContent className="flex items-center justify-between py-4">
           <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">
+            <p className="font-medium truncate flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#0D8DFF] bg-[#0D8DFF]/10 px-2 py-0.5 rounded-full shrink-0">Смета</span>
               {estimate.input_text?.slice(0, 80) ||
-                `Смета от ${new Date(estimate.created_at).toLocaleDateString("ru-RU")}`}
+                `от ${new Date(estimate.created_at).toLocaleDateString("ru-RU")}`}
             </p>
             <p className="text-sm text-muted-foreground">
               {new Date(estimate.created_at).toLocaleDateString("ru-RU", {
