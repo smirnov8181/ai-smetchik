@@ -2,421 +2,407 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRegion } from "@/lib/i18n/region-context";
-import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   FileText,
+  ArrowRight,
   Zap,
   Shield,
-  ArrowRight,
+  Clock,
   Upload,
   Brain,
   Table,
   Download,
   ShieldCheck,
   AlertTriangle,
-  CheckCircle,
+  CheckCircle2,
+  ArrowUpRight,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
-const content = {
-  RU: {
-    beta: "Бета-версия",
-    heroTitle1: "Смета на ремонт",
-    heroTitle2: "за 2 минуты",
-    heroDesc: "Загрузите описание, фото или PDF — AI проанализирует и составит детальную смету с ценами на все работы и материалы",
-    tryFree: "Попробовать бесплатно",
-    freeNote: "3 сметы бесплатно, без карты",
-    login: "Войти",
-    startFree: "Начать бесплатно",
+const stats = [
+  { value: "30 сек", label: "на проверку сметы" },
+  { value: "120K+", label: "средняя переплата (руб.)" },
+  { value: "3", label: "бесплатные сметы" },
+  { value: "100+", label: "позиций в базе цен" },
+];
 
-    // Verification section
-    forCustomers: "Для заказчиков",
-    beingScammed: "Вас обманывают?",
-    checkEstimate: "Проверьте смету",
-    checkDesc: "Загрузите смету от подрядчика — AI сравнит каждую позицию с рыночными ценами и покажет, где вас обманывают",
-    checkFree: "Проверить смету бесплатно",
-    overpay: "Переплата:",
-    overpayAmount: "~120 000 руб.",
-
-    // Example items
-    item1: "Штукатурка стен",
-    item1Price: "550 руб/м²",
-    item2: "Укладка плитки",
-    item2Price: "2 500 руб/м²",
-    item3: "Демонтаж обоев",
-    item3Price: "500 руб/м²",
-
-    // How it works
-    howItWorks: "Как это работает",
-    step1Title: "1. Загрузите данные",
-    step1Desc: "Текст, PDF-планировка или фото помещений — принимаем любой формат",
-    step2Title: "2. AI анализирует",
-    step2Desc: "GPT-4o извлекает параметры: площади, работы, материалы",
-    step3Title: "3. Расчёт цен",
-    step3Desc: "Детерминированный расчёт по актуальной базе цен Москвы",
-    step4Title: "4. Готовая смета",
-    step4Desc: "Таблица работ с ценами, итоги и экспорт в PDF",
-
-    // Features
-    features: "Возможности",
-    feature1Title: "Мультимодальный ввод",
-    feature1Desc: "Текст, PDF, фото — или всё сразу. AI разберётся с любым форматом данных.",
-    feature2Title: "Актуальные цены",
-    feature2Desc: "База цен на работы и материалы обновляется регулярно. Цены для Москвы и МО.",
-    feature3Title: "Экспорт в PDF",
-    feature3Desc: "Скачайте готовую смету в формате PDF для отправки подрядчику или заказчику.",
-
-    // Pricing
-    pricing: "Тарифы",
-    perMonth: "руб./мес",
-    popular: "Популярный",
-    plans: [
-      {
-        plan: "Free",
-        price: "0",
-        features: ["3 сметы", "Экспорт в PDF", "Email-поддержка"],
-        cta: "Начать бесплатно",
-      },
-      {
-        plan: "Pro",
-        price: "990",
-        features: ["30 смет/мес", "Экспорт в PDF и Excel", "Приоритетная обработка", "Поддержка в чате"],
-        cta: "Выбрать Pro",
-        popular: true,
-      },
-      {
-        plan: "Business",
-        price: "2990",
-        features: ["Безлимит смет", "API доступ", "Экспорт в PDF и Excel", "Выделенная поддержка", "Кастомный каталог цен"],
-        cta: "Выбрать Business",
-      },
-    ],
-
-    footer: "© 2025 AI Сметчик. Все права защищены.",
-  },
-
-  US: {
-    beta: "Beta",
-    heroTitle1: "Contractor Estimate",
-    heroTitle2: "in 2 minutes",
-    heroDesc: "Upload description, photo or PDF — AI will analyze and check if your contractor is overcharging you",
-    tryFree: "Try for Free",
-    freeNote: "3 free checks, no card required",
-    login: "Log in",
-    startFree: "Start Free",
-
-    // Verification section
-    forCustomers: "For Homeowners",
-    beingScammed: "Being Overcharged?",
-    checkEstimate: "Check Your Estimate",
-    checkDesc: "Upload your contractor's estimate — AI will compare each item with market prices and show where you're overpaying",
-    checkFree: "Check Estimate Free",
-    overpay: "Overpay:",
-    overpayAmount: "~$4,200",
-
-    // Example items
-    item1: "Wall plastering",
-    item1Price: "$8/sq ft",
-    item2: "Tile installation",
-    item2Price: "$25/sq ft",
-    item3: "Wallpaper removal",
-    item3Price: "$5/sq ft",
-
-    // How it works
-    howItWorks: "How It Works",
-    step1Title: "1. Upload Data",
-    step1Desc: "Text, PDF or photos — we accept any format",
-    step2Title: "2. AI Analyzes",
-    step2Desc: "GPT-4o extracts parameters: areas, work items, materials",
-    step3Title: "3. Price Check",
-    step3Desc: "Comparison with real market prices in your area",
-    step4Title: "4. Get Report",
-    step4Desc: "See exactly where you're being overcharged",
-
-    // Features
-    features: "Features",
-    feature1Title: "Any Format",
-    feature1Desc: "Text, PDF, photos — or all at once. AI handles any input format.",
-    feature2Title: "Real Prices",
-    feature2Desc: "Price database updated regularly. Regional pricing for major US metros.",
-    feature3Title: "Export PDF",
-    feature3Desc: "Download your report as PDF to discuss with your contractor.",
-
-    // Pricing
-    pricing: "Pricing",
-    perMonth: "/month",
-    popular: "Popular",
-    plans: [
-      {
-        plan: "Free",
-        price: "$0",
-        features: ["3 estimate checks", "Basic report", "Email support"],
-        cta: "Start Free",
-      },
-      {
-        plan: "Pro",
-        price: "$29",
-        features: ["30 checks/month", "Detailed reports", "Priority processing", "Chat support"],
-        cta: "Get Pro",
-        popular: true,
-      },
-      {
-        plan: "Business",
-        price: "$99",
-        features: ["Unlimited checks", "API access", "PDF & Excel export", "Dedicated support", "Custom price catalog"],
-        cta: "Get Business",
-      },
-    ],
-
-    footer: "© 2025 ContractorCheck. All rights reserved.",
-  },
-};
+const steps = [
+  { num: "01", icon: Upload, title: "Загрузите", desc: "Текст, фото или PDF — принимаем любой формат", color: "bg-[#FA5424]" },
+  { num: "02", icon: Brain, title: "AI анализ", desc: "GPT-4o извлекает работы, площади и материалы", color: "bg-[#0D8DFF]" },
+  { num: "03", icon: Table, title: "Расчёт цен", desc: "Сравнение с актуальной базой цен Москвы", color: "bg-[#33C791]" },
+  { num: "04", icon: Download, title: "Готово", desc: "Таблица работ с ценами и экспорт в PDF", color: "bg-[#161616]" },
+];
 
 export function LandingContent() {
-  const { region, t } = useRegion();
-  const c = content[region];
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
-
-    // Check current session
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       setLoading(false);
     });
-
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#FAF4EC] text-[#161616] overflow-x-hidden font-sans">
       {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">{t.appName}</span>
-          </div>
-          <div className="flex items-center gap-4">
-            {!loading && (
-              user ? (
-                <Link href="/ru/dashboard">
-                  <Button>{region === "RU" ? "В личный кабинет" : "Go to Dashboard"}</Button>
-                </Link>
-              ) : (
-                <>
-                  <Link href="/ru/login">
-                    <Button variant="ghost">{c.login}</Button>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#FAF4EC]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#161616] rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-[#FAF4EC]" />
+              </div>
+              <span className="font-bold text-xl tracking-tight">AI Сметчик</span>
+            </div>
+            <div className="flex items-center gap-3">
+              {!loading && (
+                user ? (
+                  <Link href="/ru/dashboard">
+                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
+                      В личный кабинет
+                    </button>
                   </Link>
-                  <Link href="/ru/register">
-                    <Button>{c.startFree}</Button>
-                  </Link>
-                </>
-              )
-            )}
+                ) : (
+                  <>
+                    <Link href="/ru/login" className="hidden sm:block">
+                      <button className="cursor-pointer text-[#161616]/70 hover:text-[#161616] font-medium px-4 py-2 transition-colors">
+                        Войти
+                      </button>
+                    </Link>
+                    <Link href="/ru/register">
+                      <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
+                        Начать бесплатно
+                      </button>
+                    </Link>
+                  </>
+                )
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <Badge variant="secondary" className="mb-4">
-          {c.beta}
-        </Badge>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-          {c.heroTitle1}
-          <br />
-          <span className="text-primary">{c.heroTitle2}</span>
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          {c.heroDesc}
-        </p>
-        <div className="flex items-center justify-center gap-4">
-          <Link href="/ru/register">
-            <Button size="lg" className="text-lg px-8">
-              {c.tryFree}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-        </div>
-        <p className="text-sm text-muted-foreground mt-4">
-          {c.freeNote}
-        </p>
-      </section>
-
-      {/* Verification CTA */}
-      <section className="bg-muted/50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+      <section className="min-h-screen flex items-center pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-6 w-full">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
             <div>
-              <Badge variant="secondary" className="mb-3">
-                {c.forCustomers}
-              </Badge>
-              <h2 className="text-3xl font-bold mb-4">
-                {c.beingScammed}
+              <div className="inline-flex items-center gap-2 bg-[#161616]/5 rounded-full px-4 py-2 mb-8">
+                <span className="w-2 h-2 rounded-full bg-[#33C791] animate-pulse" />
+                <span className="text-sm font-medium">Бета-версия</span>
+              </div>
+
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight mb-6">
+                Смета на ремонт
                 <br />
-                <span className="text-primary">{c.checkEstimate}</span>
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                {c.checkDesc}
+                <span className="text-[#0D8DFF]">за 2 минуты</span>
+              </h1>
+
+              <p className="text-xl lg:text-2xl text-[#161616]/60 mb-10 max-w-lg">
+                Загрузите описание, фото или PDF — AI проанализирует и составит детальную смету с ценами на все работы и материалы.
               </p>
-              <Link href="/ru/register">
-                <Button size="lg">
-                  <ShieldCheck className="mr-2 h-5 w-5" />
-                  {c.checkFree}
-                </Button>
-              </Link>
+
+              <div className="flex flex-wrap gap-4 mb-8">
+                <Link href="/ru/register">
+                  <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
+                    Попробовать бесплатно
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-6 text-sm text-[#161616]/50">
+                <span className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#33C791]" />
+                  Результат за 30 секунд
+                </span>
+                <span className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-[#0D8DFF]" />
+                  3 сметы бесплатно
+                </span>
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#FA5424]" />
+                  Экспорт в PDF
+                </span>
+              </div>
             </div>
-            <Card className="border-2">
-              <CardContent className="pt-6 space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-md bg-green-50 dark:bg-green-900/20">
-                  <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-                  <div className="flex-1 text-sm">
-                    <span className="font-medium">{c.item1}</span>
-                    <span className="text-muted-foreground"> — {c.item1Price}</span>
+
+            {/* Right: Demo Card */}
+            <div className="relative">
+              <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-[#161616]/10 border border-[#161616]/5">
+                <div className="text-xs font-semibold text-[#161616]/40 uppercase tracking-wider mb-6">
+                  Пример анализа
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-[#33C791]/10 border border-[#33C791]/20">
+                    <span className="font-medium">Штукатурка стен</span>
+                    <span className="text-[#33C791] font-semibold flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" /> 550 руб/м²
+                    </span>
                   </div>
-                  <span className="text-green-600 text-sm font-medium">OK</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-md bg-yellow-50 dark:bg-yellow-900/20">
-                  <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />
-                  <div className="flex-1 text-sm">
-                    <span className="font-medium">{c.item2}</span>
-                    <span className="text-muted-foreground"> — {c.item2Price}</span>
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-[#FA5424]/10 border border-[#FA5424]/20">
+                    <span className="font-medium">Укладка плитки</span>
+                    <span className="text-[#FA5424] font-semibold">+40% переплата</span>
                   </div>
-                  <span className="text-yellow-600 text-sm font-medium">+40%</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-md bg-red-50 dark:bg-red-900/20">
-                  <AlertTriangle className="h-5 w-5 text-red-500 shrink-0" />
-                  <div className="flex-1 text-sm">
-                    <span className="font-medium">{c.item3}</span>
-                    <span className="text-muted-foreground"> — {c.item3Price}</span>
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
+                    <span className="font-medium">Демонтаж обоев</span>
+                    <span className="text-red-500 font-semibold">+316% переплата</span>
                   </div>
-                  <span className="text-red-600 text-sm font-medium">+316%</span>
                 </div>
-                <Separator />
-                <div className="text-center pt-1">
-                  <p className="text-sm text-muted-foreground">{c.overpay}</p>
-                  <p className="text-2xl font-bold text-red-600">{c.overpayAmount}</p>
+                <div className="mt-6 pt-6 border-t border-[#161616]/10 flex justify-between items-center">
+                  <span className="text-[#161616]/50">Переплата</span>
+                  <span className="text-3xl font-bold text-red-500">~120 000 руб.</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              {/* Decorative elements */}
+              <div className="absolute -z-10 top-8 -right-8 w-full h-full bg-[#0D8DFF]/20 rounded-3xl" />
+              <div className="absolute -z-20 top-16 -right-16 w-full h-full bg-[#33C791]/10 rounded-3xl" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">{c.howItWorks}</h2>
-        <div className="grid md:grid-cols-4 gap-6">
-          {[
-            { icon: Upload, title: c.step1Title, desc: c.step1Desc },
-            { icon: Brain, title: c.step2Title, desc: c.step2Desc },
-            { icon: Table, title: c.step3Title, desc: c.step3Desc },
-            { icon: Download, title: c.step4Title, desc: c.step4Desc },
-          ].map((step) => (
-            <Card key={step.title}>
-              <CardHeader>
-                <step.icon className="h-10 w-10 text-primary mb-2" />
-                <CardTitle className="text-lg">{step.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">{step.desc}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="bg-muted/50 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">{c.features}</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: Zap, title: c.feature1Title, desc: c.feature1Desc },
-              { icon: Shield, title: c.feature2Title, desc: c.feature2Desc },
-              { icon: FileText, title: c.feature3Title, desc: c.feature3Desc },
-            ].map((feature) => (
-              <Card key={feature.title}>
-                <CardHeader>
-                  <feature.icon className="h-8 w-8 text-primary mb-2" />
-                  <CardTitle>{feature.title}</CardTitle>
-                  <CardDescription>{feature.desc}</CardDescription>
-                </CardHeader>
-              </Card>
+      {/* Stats */}
+      <section className="py-16 bg-[#161616] text-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, i) => (
+              <div key={i} className="text-center">
+                <div className="text-4xl md:text-5xl font-bold mb-2">{stat.value}</div>
+                <div className="text-white/50 text-sm">{stat.label}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-12">{c.pricing}</h2>
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {c.plans.map((tier) => (
-            <Card
-              key={tier.plan}
-              className={tier.popular ? "border-primary shadow-lg" : ""}
-            >
-              <CardHeader>
-                {tier.popular && (
-                  <Badge className="w-fit mb-2">{c.popular}</Badge>
-                )}
-                <CardTitle>{tier.plan}</CardTitle>
-                <div className="text-3xl font-bold">
-                  {tier.price}{" "}
-                  <span className="text-lg font-normal text-muted-foreground">
-                    {c.perMonth}
-                  </span>
+      {/* Verification CTA */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              Вас <span className="text-[#FA5424]">обманывают?</span>
+              <br />
+              <span className="text-[#0D8DFF]">Проверьте смету</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="p-8 rounded-3xl bg-[#FA5424]/10 border-2 border-[#FA5424]/20">
+              <div className="text-[#FA5424] font-bold text-sm uppercase tracking-wider mb-6">Без проверки</div>
+              <ul className="space-y-4">
+                {["Подрядчик называет цену «на глаз»", "Не знаете рыночных цен", "Завышение на 30-100%", "Средняя переплата: 120 000 руб."].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[#161616]/70">
+                    <span className="text-[#FA5424] font-bold mt-0.5">
+                      <AlertTriangle className="w-4 h-4" />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-8 rounded-3xl bg-[#33C791]/10 border-2 border-[#33C791]/20">
+              <div className="text-[#33C791] font-bold text-sm uppercase tracking-wider mb-6">С AI Сметчиком</div>
+              <ul className="space-y-4">
+                {["AI проверяет каждую позицию", "Сравнение с рыночными ценами", "Видите где завышено", "Экономите десятки тысяч"].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[#161616]/70">
+                    <span className="text-[#33C791] font-bold mt-0.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/ru/register">
+              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5" />
+                Проверить смету бесплатно
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+              Как это <span className="text-[#0D8DFF]">работает</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            {steps.map((step, i) => (
+              <div key={i} className="group relative p-8 rounded-3xl bg-[#FAF4EC] hover:-translate-y-2 transition-transform duration-300">
+                <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  <step.icon className="w-8 h-8 text-white" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 mb-6">
-                  {tier.features.map((f) => (
-                    <li
-                      key={f}
-                      className="text-sm text-muted-foreground flex items-center gap-2"
-                    >
-                      <span className="text-primary">&#10003;</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/ru/register">
-                  <Button
-                    variant={tier.popular ? "default" : "outline"}
-                    className="w-full"
-                  >
-                    {tier.cta}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="text-7xl font-bold text-[#161616]/5 absolute top-4 right-6">{step.num}</div>
+                <h3 className="text-2xl font-bold mb-2">{step.title}</h3>
+                <p className="text-[#161616]/50">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+              Возможности
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="group p-8 rounded-3xl bg-white border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="w-14 h-14 bg-[#0D8DFF]/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Zap className="w-7 h-7 text-[#0D8DFF]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Мультимодальный ввод</h3>
+              <p className="text-[#161616]/50 leading-relaxed">Текст, PDF, фото — или всё сразу. AI разберётся с любым форматом данных.</p>
+            </div>
+
+            <div className="group p-8 rounded-3xl bg-white border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="w-14 h-14 bg-[#33C791]/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Shield className="w-7 h-7 text-[#33C791]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Актуальные цены</h3>
+              <p className="text-[#161616]/50 leading-relaxed">База цен на работы и материалы обновляется регулярно. Цены для Москвы и МО.</p>
+            </div>
+
+            <div className="group p-8 rounded-3xl bg-white border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="w-14 h-14 bg-[#FA5424]/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <FileText className="w-7 h-7 text-[#FA5424]" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Экспорт в PDF</h3>
+              <p className="text-[#161616]/50 leading-relaxed">Скачайте готовую смету в формате PDF для отправки подрядчику или заказчику.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+              Тарифы
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {/* Free */}
+            <div className="p-8 rounded-3xl bg-[#FAF4EC] border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-2">Free</h3>
+              <div className="text-4xl font-bold mb-1">0 <span className="text-lg font-normal text-[#161616]/50">руб./мес</span></div>
+              <ul className="space-y-3 my-8">
+                {["3 сметы", "Экспорт в PDF", "Email-поддержка"].map((f, i) => (
+                  <li key={i} className="flex items-center gap-3 text-[#161616]/70">
+                    <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/ru/register">
+                <button className="cursor-pointer w-full bg-[#161616]/10 text-[#161616] font-semibold py-4 rounded-full hover:bg-[#161616]/20 transition-all">
+                  Начать бесплатно
+                </button>
+              </Link>
+            </div>
+
+            {/* Pro */}
+            <div className="p-8 rounded-3xl bg-[#FAF4EC] border-2 border-[#0D8DFF] shadow-lg shadow-[#0D8DFF]/10 hover:-translate-y-2 transition-all duration-300 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0D8DFF] text-[#161616] font-semibold text-sm px-4 py-1 rounded-full">
+                Популярный
+              </div>
+              <h3 className="text-xl font-bold mb-2">Pro</h3>
+              <div className="text-4xl font-bold mb-1">990 <span className="text-lg font-normal text-[#161616]/50">руб./мес</span></div>
+              <ul className="space-y-3 my-8">
+                {["30 смет/мес", "Экспорт в PDF и Excel", "Приоритетная обработка", "Поддержка в чате"].map((f, i) => (
+                  <li key={i} className="flex items-center gap-3 text-[#161616]/70">
+                    <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/ru/register">
+                <button className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
+                  Выбрать Pro
+                </button>
+              </Link>
+            </div>
+
+            {/* Business */}
+            <div className="p-8 rounded-3xl bg-[#FAF4EC] border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
+              <h3 className="text-xl font-bold mb-2">Business</h3>
+              <div className="text-4xl font-bold mb-1">2990 <span className="text-lg font-normal text-[#161616]/50">руб./мес</span></div>
+              <ul className="space-y-3 my-8">
+                {["Безлимит смет", "API доступ", "Экспорт в PDF и Excel", "Выделенная поддержка", "Кастомный каталог цен"].map((f, i) => (
+                  <li key={i} className="flex items-center gap-3 text-[#161616]/70">
+                    <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/ru/register">
+                <button className="cursor-pointer w-full bg-[#161616]/10 text-[#161616] font-semibold py-4 rounded-full hover:bg-[#161616]/20 transition-all">
+                  Выбрать Business
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 bg-[#161616] text-white">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            Не переплачивайте
+            <span className="block text-[#33C791]">за ремонт.</span>
+          </h2>
+          <p className="text-xl text-white/50 mb-10 max-w-2xl mx-auto">
+            Создайте смету или проверьте смету подрядчика — бесплатно и за 30 секунд.
+          </p>
+          <Link href="/ru/register">
+            <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
+              Начать бесплатно
+              <ArrowUpRight className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>{c.footer}</p>
+      <footer className="py-12 bg-[#FAF4EC] border-t border-[#161616]/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#161616] rounded-lg flex items-center justify-center">
+                <FileText className="h-4 w-4 text-[#FAF4EC]" />
+              </div>
+              <span className="font-bold">AI Сметчик</span>
+            </div>
+            <p className="text-sm text-[#161616]/40">&copy; 2025 AI Сметчик. Все права защищены.</p>
+          </div>
         </div>
       </footer>
     </div>
