@@ -821,7 +821,6 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
       </Card>
 
       {/* Detailed Table */}
-      <FadeIn direction="up" delay={0.2}>
         <Card>
           <CardHeader>
             <CardTitle>Детализация работ</CardTitle>
@@ -835,11 +834,9 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
             <EstimateTable sections={result.sections} />
           </CardContent>
         </Card>
-      </FadeIn>
 
       {/* Paywall — selling block */}
       {hasPaywall && (
-        <ScaleIn delay={0.3}>
         <Card className="border-2 border-[#0D8DFF]/30 bg-gradient-to-b from-white to-[#0D8DFF]/5 dark:from-slate-900 dark:to-[#0D8DFF]/10 overflow-hidden">
           <CardContent className="py-10 px-8">
             {/* Header */}
@@ -926,13 +923,11 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
             </div>
           </CardContent>
         </Card>
-        </ScaleIn>
       )}
 
       {/* Summary Total - so user doesn't need to scroll up (paid only) */}
       {!hasPaywall && (
-        <FadeIn direction="up" delay={0.1}>
-          <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+           <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
             <CardContent className="py-6 space-y-4">
               {/* Material Tier Toggle */}
               <div className="flex justify-center gap-2">
@@ -982,8 +977,7 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                 </div>
               </div>
             </CardContent>
-          </Card>
-        </FadeIn>
+           </Card>
       )}
 
       {/* What if scenarios - decision simulator (only for paid) */}
