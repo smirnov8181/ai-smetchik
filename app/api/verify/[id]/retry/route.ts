@@ -9,7 +9,7 @@ import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
 import { parseContractorXlsx, isXlsxBuffer } from "@/lib/utils/xlsx-parser";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // POST /api/verify/:id/retry — retry a failed/stuck verification
 export async function POST(

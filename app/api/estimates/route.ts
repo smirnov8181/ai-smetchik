@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Force Node.js runtime (not Edge) for PDF parsing
 export const runtime = "nodejs";
 // Increase timeout for AI processing (60s for Pro, 10s for Hobby)
-export const maxDuration = 60;
+export const maxDuration = 300;
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { normalizeInput } from "@/lib/ai/normalizer";

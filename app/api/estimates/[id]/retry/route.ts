@@ -7,7 +7,7 @@ import { generateEstimate } from "@/lib/ai/generator";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // POST /api/estimates/:id/retry — retry a failed/stuck estimate
 export async function POST(

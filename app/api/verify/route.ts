@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Force Node.js runtime for PDF/XLSX parsing
 export const runtime = "nodejs";
 // Increase timeout for AI processing
-export const maxDuration = 60;
+export const maxDuration = 300;
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
   parseContractorEstimate,
