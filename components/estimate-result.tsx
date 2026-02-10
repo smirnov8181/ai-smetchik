@@ -837,34 +837,93 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
         </Card>
       </FadeIn>
 
-      {/* Paywall */}
+      {/* Paywall — selling block */}
       {hasPaywall && (
         <ScaleIn delay={0.3}>
-        <Card className="border-primary">
-          <CardContent className="py-8 text-center">
-            <Lock className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-bold mb-2">
-              Ещё {hiddenSections} {hiddenSections === 1 ? "раздел" : hiddenSections < 5 ? "раздела" : "разделов"} ({hiddenItems} позиций) скрыто
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Получите полную смету со всеми разделами, экспортом в CSV и симулятором &laquo;А что если...&raquo;
-            </p>
-            <Button
-              size="lg"
-              className="text-lg px-8"
-              onClick={handlePay}
-              disabled={isPaymentLoading}
-            >
-              {isPaymentLoading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <ShieldCheck className="mr-2 h-5 w-5" />
-              )}
-              Получить полную смету — 490 руб.
-            </Button>
-            <p className="text-xs text-muted-foreground mt-3">
-              Разовый платёж. Безопасная оплата банковской картой.
-            </p>
+        <Card className="border-2 border-[#0D8DFF]/30 bg-gradient-to-b from-white to-[#0D8DFF]/5 dark:from-slate-900 dark:to-[#0D8DFF]/10 overflow-hidden">
+          <CardContent className="py-10 px-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0D8DFF]/10 mb-4">
+                <ShieldCheck className="h-8 w-8 text-[#0D8DFF]" />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">
+                Ещё {hiddenSections} {hiddenSections === 1 ? "раздел" : hiddenSections < 5 ? "раздела" : "разделов"} и {hiddenItems} позиций
+              </h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Откройте полную смету — и приходите к подрядчику с конкретными цифрами
+              </p>
+            </div>
+
+            {/* What you get — 2 columns */}
+            <div className="grid md:grid-cols-2 gap-4 mb-8 max-w-lg mx-auto">
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <div className="w-8 h-8 rounded-lg bg-[#33C791]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <CheckCircle className="w-4 h-4 text-[#33C791]" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Все разделы сметы</p>
+                  <p className="text-xs text-muted-foreground">Цены на каждую работу и материал</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <div className="w-8 h-8 rounded-lg bg-[#0D8DFF]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <PieChart className="w-4 h-4 text-[#0D8DFF]" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">3 варианта материалов</p>
+                  <p className="text-xs text-muted-foreground">Эконом, стандарт и комфорт</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <div className="w-8 h-8 rounded-lg bg-[#FA5424]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lightbulb className="w-4 h-4 text-[#FA5424]" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Симулятор «А что если...»</p>
+                  <p className="text-xs text-muted-foreground">Как снизить стоимость ремонта</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                <div className="w-8 h-8 rounded-lg bg-slate-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FileSpreadsheet className="w-4 h-4 text-slate-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Экспорт в CSV и PDF</p>
+                  <p className="text-xs text-muted-foreground">Отправьте подрядчику или в Excel</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Social proof nudge */}
+            <div className="text-center mb-6">
+              <p className="text-sm text-muted-foreground italic">
+                «Показал подрядчику смету — он снизил цену на 40 000 руб.»
+              </p>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center">
+              <Button
+                size="lg"
+                className="text-lg px-10 py-6 rounded-full shadow-lg shadow-primary/20"
+                onClick={handlePay}
+                disabled={isPaymentLoading}
+              >
+                {isPaymentLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <ShieldCheck className="mr-2 h-5 w-5" />
+                )}
+                Открыть полную смету — 490 руб.
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Разовый платёж • Банковская карта • Моментальный доступ
+              </p>
+            </div>
           </CardContent>
         </Card>
         </ScaleIn>
