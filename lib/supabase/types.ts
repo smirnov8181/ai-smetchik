@@ -119,6 +119,7 @@ export interface Verification {
   overpay_amount: number | null;
   overpay_percent: number | null;
   is_paid: boolean;
+  share_token: string | null;
   error_message: string | null;
   region: string;
   created_at: string;

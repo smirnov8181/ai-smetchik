@@ -209,6 +209,7 @@ export default function VerificationDetailPage() {
           result={verification.result as VerificationResultType}
           verificationId={verification.id}
           isPaid={verification.is_paid || justPaid || isAdmin}
+          shareToken={verification.share_token}
         />
       )}
 

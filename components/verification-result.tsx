@@ -46,6 +46,7 @@ interface VerificationResultProps {
   verificationId: string;
   isPaid: boolean;
   isPublic?: boolean;
+  shareToken?: string | null;
 }
 
 function formatPrice(amount: number): string {
@@ -103,11 +104,14 @@ export function VerificationResult({
   verificationId,
   isPaid,
   isPublic = false,
+  shareToken: initialShareToken,
 }: VerificationResultProps) {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareToken, setShareToken] = useState<string | null>(initialShareToken ?? null);
+  const [isSharing, setIsSharing] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
@@ -355,11 +359,34 @@ export function VerificationResult({
     }
   };
 
-  const handleCopyLink = () => {
-    const url = window.location.href;
+  const copyShareLink = (token: string) => {
+    const url = `${window.location.origin}/ru/share/verify/${token}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if (shareToken) {
+      copyShareLink(shareToken);
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      const res = await fetch(`/api/verify/${verificationId}/share`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.share_token) {
+        setShareToken(data.share_token);
+        copyShareLink(data.share_token);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   const handleCopyMessage = () => {
@@ -757,8 +784,13 @@ export function VerificationResult({
             {isExportingPdf ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <FileText className="mr-1 h-4 w-4" />}
             Скачать PDF
           </Button>
-          <Button variant="outline" size="sm" onClick={handleCopyLink}>
-            {copied ? (
+          <Button variant="outline" size="sm" onClick={handleShare} disabled={isSharing}>
+            {isSharing ? (
+              <>
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                Создаём ссылку...
+              </>
+            ) : copied ? (
               <>
                 <CheckCircle className="mr-1 h-4 w-4 text-green-500" />
                 Ссылка скопирована
