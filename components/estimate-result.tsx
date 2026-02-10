@@ -311,7 +311,7 @@ export function EstimateResult({ result, estimateId, shareToken: initialShareTok
   };
 
   const copyShareLink = async (token: string) => {
-    const url = `${window.location.origin}/share/${token}`;
+    const url = `${window.location.origin}/ru/share/${token}`;
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
