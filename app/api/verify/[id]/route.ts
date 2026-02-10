@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/utils/admin";
 
 // GET /api/verify/:id
 export async function GET(
@@ -31,8 +32,10 @@ export async function GET(
     );
   }
 
-  // Strip full result details if not paid (server-side paywall)
-  if (!verification.is_paid && verification.result) {
+  const admin = isAdminUser(user.email ?? undefined);
+
+  // Strip full result details if not paid and not admin (server-side paywall)
+  if (!verification.is_paid && !admin && verification.result) {
     const freePreviewCount = 3;
     const result = verification.result as { items?: Array<Record<string, unknown>>; recommendations?: string[]; [key: string]: unknown };
     if (result.items && Array.isArray(result.items)) {
@@ -52,7 +55,7 @@ export async function GET(
     verification.result = result;
   }
 
-  return NextResponse.json({ verification });
+  return NextResponse.json({ verification, isAdmin: admin });
 }
 
 // DELETE /api/verify/:id

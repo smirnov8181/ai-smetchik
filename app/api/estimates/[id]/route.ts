@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/utils/admin";
 
 // GET /api/estimates/:id
 export async function GET(
@@ -34,8 +35,10 @@ export async function GET(
     .select("*")
     .eq("estimate_id", id);
 
-  // Server-side paywall: if not paid, show only first 50% of sections
-  if (!estimate.is_paid && estimate.result?.sections) {
+  const admin = isAdminUser(user.email ?? undefined);
+
+  // Server-side paywall: if not paid and not admin, show only first 50% of sections
+  if (!estimate.is_paid && !admin && estimate.result?.sections) {
     const sections = estimate.result.sections as Array<{
       category: string;
       items: Array<Record<string, unknown>>;
@@ -56,7 +59,7 @@ export async function GET(
     };
   }
 
-  return NextResponse.json({ estimate, files: files || [] });
+  return NextResponse.json({ estimate, files: files || [], isAdmin: admin });
 }
 
 // DELETE /api/estimates/:id

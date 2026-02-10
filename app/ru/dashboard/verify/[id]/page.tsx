@@ -30,6 +30,7 @@ export default function VerificationDetailPage() {
   const justPaid = searchParams.get("paid") === "true";
 
   const [verification, setVerification] = useState<Verification | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +49,7 @@ export default function VerificationDetailPage() {
         }
 
         setVerification(data.verification);
+        if (data.isAdmin) setIsAdmin(true);
         setLoading(false);
 
         if (data.verification.status === "processing") {
@@ -190,7 +192,7 @@ export default function VerificationDetailPage() {
         <VerificationResult
           result={verification.result as VerificationResultType}
           verificationId={verification.id}
-          isPaid={verification.is_paid || justPaid}
+          isPaid={verification.is_paid || justPaid || isAdmin}
         />
       )}
 

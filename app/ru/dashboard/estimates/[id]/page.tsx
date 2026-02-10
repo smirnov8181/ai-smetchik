@@ -28,6 +28,7 @@ export default function EstimateDetailPage() {
   const id = params.id as string;
   const justPaid = searchParams.get("paid") === "true";
   const [estimate, setEstimate] = useState<Estimate | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ export default function EstimateDetailPage() {
         }
 
         setEstimate(data.estimate);
+        if (data.isAdmin) setIsAdmin(true);
         setLoading(false);
 
         // Keep polling if still processing
@@ -170,7 +172,7 @@ export default function EstimateDetailPage() {
         <EstimateResult
           result={estimate.result as EstimateResultType}
           estimateId={estimate.id}
-          isPaid={estimate.is_paid || justPaid}
+          isPaid={estimate.is_paid || justPaid || isAdmin}
           shareToken={estimate.share_token}
         />
       )}
