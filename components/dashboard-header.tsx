@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRegion } from "@/lib/i18n/region-context";
-import { RegionSwitcher } from "@/components/region-switcher";
 import { FileText, Plus, LogOut, ShieldCheck } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -34,7 +33,6 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
               <span className="hidden sm:inline">{t.verifyEstimate}</span>
             </button>
           </Link>
-          <RegionSwitcher />
           <form action={onLogout}>
             <button
               type="submit"
