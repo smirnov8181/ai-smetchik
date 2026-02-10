@@ -57,7 +57,7 @@ export function VerificationCard({ verification }: VerificationCardProps) {
   };
 
   return (
-    <Link href={`/dashboard/verify/${verification.id}`}>
+    <Link href={`/ru/dashboard/verify/${verification.id}`}>
       <Card className="hover:bg-muted/50 transition-colors cursor-pointer group">
         <CardContent className="flex items-center justify-between py-4">
           <div className="flex-1 min-w-0">

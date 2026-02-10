@@ -30,7 +30,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}/ru/dashboard`,
       },
     });
 
@@ -48,7 +48,7 @@ export default function RegisterPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/ru/dashboard`,
       },
     });
   };
@@ -66,7 +66,7 @@ export default function RegisterPage() {
               Мы отправили письмо с подтверждением на <span className="font-medium text-[#161616]">{email}</span>. Перейдите по ссылке в письме для завершения регистрации.
             </p>
             <button
-              onClick={() => router.push("/login")}
+              onClick={() => router.push("/ru/login")}
               className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all flex items-center justify-center gap-2"
             >
               Перейти к входу
@@ -82,7 +82,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[#FAF4EC] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center gap-3 mb-8">
+        <Link href="/ru" className="flex items-center justify-center gap-3 mb-8">
           <div className="w-12 h-12 bg-[#161616] rounded-xl flex items-center justify-center">
             <FileText className="h-6 w-6 text-[#FAF4EC]" />
           </div>
@@ -174,7 +174,7 @@ export default function RegisterPage() {
 
           <p className="text-sm text-center text-[#161616]/50 mt-6">
             Уже есть аккаунт?{" "}
-            <Link href="/login" className="text-[#0D8DFF] font-medium hover:underline">
+            <Link href="/ru/login" className="text-[#0D8DFF] font-medium hover:underline">
               Войти
             </Link>
           </p>

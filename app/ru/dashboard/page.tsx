@@ -75,7 +75,7 @@ export default async function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#161616]">Мои сметы</h2>
-          <Link href="/dashboard/estimates/new">
+          <Link href="/ru/dashboard/estimates/new">
             <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
               <Plus className="w-5 h-5" />
               Новая смета
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
             <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
               Создайте первую смету — опишите проект или загрузите файлы
             </p>
-            <Link href="/dashboard/estimates/new">
+            <Link href="/ru/dashboard/estimates/new">
               <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
                 Создать смету
               </button>
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#161616]">Проверки смет</h2>
-          <Link href="/dashboard/verify/new">
+          <Link href="/ru/dashboard/verify/new">
             <button className="cursor-pointer group flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
               <ShieldCheck className="w-5 h-5" />
               Проверить смету
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
             <p className="text-[#161616]/50 mb-6 max-w-md mx-auto">
               Загрузите смету подрядчика — узнайте, не завышены ли цены
             </p>
-            <Link href="/dashboard/verify/new">
+            <Link href="/ru/dashboard/verify/new">
               <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
                 Проверить смету
               </button>

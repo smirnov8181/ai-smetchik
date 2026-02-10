@@ -35,13 +35,6 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Handle RU dashboard auth
-    if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
-    }
-
     // Handle US dashboard auth
     if (!user && request.nextUrl.pathname.startsWith("/us/dashboard")) {
       const url = request.nextUrl.clone();
@@ -49,14 +42,21 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    // Handle RU dashboard auth
+    if (!user && request.nextUrl.pathname.startsWith("/ru/dashboard")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/ru/login";
+      return NextResponse.redirect(url);
+    }
+
     // Redirect logged-in users from RU login/register to dashboard
     if (
       user &&
-      (request.nextUrl.pathname === "/login" ||
-        request.nextUrl.pathname === "/register")
+      (request.nextUrl.pathname === "/ru/login" ||
+        request.nextUrl.pathname === "/ru/register")
     ) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = "/ru/dashboard";
       return NextResponse.redirect(url);
     }
 
@@ -77,9 +77,9 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/us/login";
       return NextResponse.redirect(url);
     }
-    if (request.nextUrl.pathname.startsWith("/dashboard")) {
+    if (request.nextUrl.pathname.startsWith("/ru/dashboard")) {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = "/ru/login";
       return NextResponse.redirect(url);
     }
     // For login/register pages, allow through even on error
@@ -91,9 +91,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/login",
-    "/register",
+    "/ru/dashboard/:path*",
+    "/ru/login",
+    "/ru/register",
     "/us/dashboard/:path*",
     "/us/login",
     "/us/register",

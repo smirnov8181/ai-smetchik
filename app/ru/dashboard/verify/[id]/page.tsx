@@ -92,7 +92,7 @@ export default function VerificationDetailPage() {
             <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-semibold mb-2">Ошибка</h3>
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Link href="/dashboard">
+            <Link href="/ru/dashboard">
               <Button variant="outline">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Назад
@@ -109,7 +109,7 @@ export default function VerificationDetailPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard">
+        <Link href="/ru/dashboard">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-1 h-4 w-4" />
             Назад
@@ -173,7 +173,7 @@ export default function VerificationDetailPage() {
                     "Не удалось распознать смету. Попробуйте загрузить в другом формате."}
                 </p>
                 <Link
-                  href="/dashboard/verify/new"
+                  href="/ru/dashboard/verify/new"
                   className="mt-3 inline-block"
                 >
                   <Button variant="outline" size="sm">

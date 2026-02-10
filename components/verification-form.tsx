@@ -88,7 +88,7 @@ export function VerificationForm() {
       }
 
       if (verificationId) {
-        router.push(`/dashboard/verify/${verificationId}`);
+        router.push(`/ru/dashboard/verify/${verificationId}`);
       } else {
         throw new Error("Не удалось создать проверку");
       }

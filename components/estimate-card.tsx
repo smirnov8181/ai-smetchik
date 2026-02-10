@@ -56,7 +56,7 @@ export function EstimateCard({ estimate }: EstimateCardProps) {
   };
 
   return (
-    <Link href={`/dashboard/estimates/${estimate.id}`}>
+    <Link href={`/ru/dashboard/estimates/${estimate.id}`}>
       <Card className="hover:bg-muted/50 transition-colors cursor-pointer group">
         <CardContent className="flex items-center justify-between py-4">
           <div className="flex-1 min-w-0">

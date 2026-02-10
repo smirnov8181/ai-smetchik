@@ -87,7 +87,7 @@ export function EstimateForm() {
       }
 
       if (estimateId) {
-        router.push(`/dashboard/estimates/${estimateId}`);
+        router.push(`/ru/dashboard/estimates/${estimateId}`);
       } else {
         throw new Error("Не удалось создать смету");
       }

@@ -75,7 +75,7 @@ export default function SharedEstimatePage() {
             <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-semibold mb-2">Смета недоступна</h3>
             <p className="text-muted-foreground mb-4">{error}</p>
-            <Link href="/">
+            <Link href="/ru">
               <Button variant="outline">На главную</Button>
             </Link>
           </CardContent>
@@ -128,7 +128,7 @@ export default function SharedEstimatePage() {
             <p className="text-muted-foreground mb-4">
               Хотите создать свою смету на ремонт?
             </p>
-            <Link href="/register">
+            <Link href="/ru/register">
               <Button>Создать бесплатно</Button>
             </Link>
           </CardContent>

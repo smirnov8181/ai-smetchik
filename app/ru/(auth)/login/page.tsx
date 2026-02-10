@@ -30,14 +30,14 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/ru/dashboard");
   };
 
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/ru/dashboard`,
       },
     });
   };
@@ -46,7 +46,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#FAF4EC] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center gap-3 mb-8">
+        <Link href="/ru" className="flex items-center justify-center gap-3 mb-8">
           <div className="w-12 h-12 bg-[#161616] rounded-xl flex items-center justify-center">
             <FileText className="h-6 w-6 text-[#FAF4EC]" />
           </div>
@@ -137,7 +137,7 @@ export default function LoginPage() {
 
           <p className="text-sm text-center text-[#161616]/50 mt-6">
             Нет аккаунта?{" "}
-            <Link href="/register" className="text-[#0D8DFF] font-medium hover:underline">
+            <Link href="/ru/register" className="text-[#0D8DFF] font-medium hover:underline">
               Зарегистрироваться
             </Link>
           </p>

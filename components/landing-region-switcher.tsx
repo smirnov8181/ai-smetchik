@@ -13,7 +13,7 @@ export function LandingRegionSwitcher() {
       <Globe className="h-4 w-4 opacity-50" />
       {isUS ? (
         <Link
-          href="/"
+          href="/ru"
           className="text-sm font-medium opacity-70 hover:opacity-100 transition-opacity"
         >
           🇷🇺 RU

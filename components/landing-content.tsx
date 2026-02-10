@@ -218,15 +218,15 @@ export function LandingContent() {
           <div className="flex items-center gap-4">
             {!loading && (
               user ? (
-                <Link href="/dashboard">
+                <Link href="/ru/dashboard">
                   <Button>{region === "RU" ? "В личный кабинет" : "Go to Dashboard"}</Button>
                 </Link>
               ) : (
                 <>
-                  <Link href="/login">
+                  <Link href="/ru/login">
                     <Button variant="ghost">{c.login}</Button>
                   </Link>
-                  <Link href="/register">
+                  <Link href="/ru/register">
                     <Button>{c.startFree}</Button>
                   </Link>
                 </>
@@ -250,7 +250,7 @@ export function LandingContent() {
           {c.heroDesc}
         </p>
         <div className="flex items-center justify-center gap-4">
-          <Link href="/register">
+          <Link href="/ru/register">
             <Button size="lg" className="text-lg px-8">
               {c.tryFree}
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -278,7 +278,7 @@ export function LandingContent() {
               <p className="text-muted-foreground mb-6">
                 {c.checkDesc}
               </p>
-              <Link href="/register">
+              <Link href="/ru/register">
                 <Button size="lg">
                   <ShieldCheck className="mr-2 h-5 w-5" />
                   {c.checkFree}
@@ -399,7 +399,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/register">
+                <Link href="/ru/register">
                   <Button
                     variant={tier.popular ? "default" : "outline"}
                     className="w-full"

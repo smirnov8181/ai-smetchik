@@ -15,20 +15,20 @@ export function DashboardHeader({ onLogout }: DashboardHeaderProps) {
   return (
     <header className="border-b border-[#161616]/10 bg-white">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-3">
+        <Link href="/ru/dashboard" className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#161616] rounded-xl flex items-center justify-center">
             <FileText className="h-5 w-5 text-[#FAF4EC]" />
           </div>
           <span className="font-bold text-xl text-[#161616]">{t.appName}</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/estimates/new">
+          <Link href="/ru/dashboard/estimates/new">
             <button className="cursor-pointer flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{t.newEstimate}</span>
             </button>
           </Link>
-          <Link href="/dashboard/verify/new">
+          <Link href="/ru/dashboard/verify/new">
             <button className="cursor-pointer flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
               <ShieldCheck className="w-4 h-4" />
               <span className="hidden sm:inline">{t.verifyEstimate}</span>
