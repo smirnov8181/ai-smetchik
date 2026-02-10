@@ -124,8 +124,6 @@ export function VerificationResult({
     }
   };
 
-  // Show only top 3 items free, rest behind paywall
-  const freePreviewCount = 3;
   const { overpayItems, okItems } = useMemo(() => {
     const overpay = [...result.items]
       .filter((i) => i.status !== "ok")
@@ -134,9 +132,16 @@ export function VerificationResult({
     return { overpayItems: overpay, okItems: ok };
   }, [result.items]);
 
+  const hasPaywall = !isPaid;
+
+  // All items sorted: overpay first, then ok
+  const allItems = useMemo(() => {
+    return [...overpayItems, ...okItems];
+  }, [overpayItems, okItems]);
+
   return (
     <div className="space-y-6">
-      {/* Verdict Card — always visible */}
+      {/* Verdict Card */}
       <ScaleIn>
       <Card className={`border ${verdict.bg}`}>
         <CardHeader>
@@ -150,170 +155,211 @@ export function VerificationResult({
                 </CardDescription>
               </div>
             </div>
-            <Badge variant={verdict.badge} className="text-lg px-4 py-1">
-              {result.overpay_percent > 0 ? `+${result.overpay_percent}%` : "OK"}
-            </Badge>
+            {hasPaywall ? (
+              <Badge variant={verdict.badge} className="text-lg px-4 py-1">
+                {result.verdict === "fair" ? "OK" : result.verdict === "slightly_overpriced" ? "Есть переплата" : "Переплата"}
+              </Badge>
+            ) : (
+              <Badge variant={verdict.badge} className="text-lg px-4 py-1">
+                {result.overpay_percent > 0 ? `+${result.overpay_percent}%` : "OK"}
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Смета подрядчика</p>
-              <p className="text-lg font-semibold">
-                {formatPrice(result.total_contractor)} руб.
-              </p>
+          {hasPaywall ? (
+            /* Free version: blurred totals */
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Смета подрядчика</p>
+                <p className="text-lg font-semibold blur-sm select-none">
+                  {formatPrice(result.total_contractor)} руб.
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Рыночная цена</p>
+                <p className="text-lg font-semibold blur-sm select-none">
+                  {formatPrice(result.total_market_avg)} руб.
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Переплата</p>
+                <p className="text-lg font-bold text-red-600 blur-sm select-none">
+                  *** *** руб.
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Завышенных позиций</p>
+                <p className="text-lg font-semibold">
+                  {overpayItems.length} из {result.items.length}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Рыночная цена</p>
-              <p className="text-lg font-semibold">
-                {formatPrice(result.total_market_avg)} руб.
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Переплата</p>
-              <p className="text-lg font-bold text-red-600">
-                {result.total_overpay > 0
-                  ? `${formatPrice(result.total_overpay)} руб.`
-                  : "Нет"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Завышенных позиций</p>
-              <p className="text-lg font-semibold">
-                {overpayItems.length} из {result.items.length}
-              </p>
-            </div>
-          </div>
-
-          <p className="text-muted-foreground">{result.summary}</p>
+          ) : (
+            /* Paid version: show everything */
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Смета подрядчика</p>
+                  <p className="text-lg font-semibold">
+                    {formatPrice(result.total_contractor)} руб.
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Рыночная цена</p>
+                  <p className="text-lg font-semibold">
+                    {formatPrice(result.total_market_avg)} руб.
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Переплата</p>
+                  <p className="text-lg font-bold text-red-600">
+                    {result.total_overpay > 0
+                      ? `${formatPrice(result.total_overpay)} руб.`
+                      : "Нет"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Завышенных позиций</p>
+                  <p className="text-lg font-semibold">
+                    {overpayItems.length} из {result.items.length}
+                  </p>
+                </div>
+              </div>
+              <p className="text-muted-foreground">{result.summary}</p>
+            </>
+          )}
         </CardContent>
       </Card>
       </ScaleIn>
 
-      {/* Free preview: top overpriced items */}
-      {overpayItems.length > 0 && (
-        <FadeIn direction="up" delay={0.2}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-red-500" />
-              Позиции с завышенной ценой
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead></TableHead>
-                    <TableHead>Работа</TableHead>
-                    <TableHead className="text-right">Подрядчик</TableHead>
+      {/* Items table — always visible, but with limited info for free users */}
+      <FadeIn direction="up" delay={0.2}>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 text-muted-foreground" />
+            Все позиции сметы
+          </CardTitle>
+          <CardDescription>
+            {hasPaywall
+              ? "Проверьте, что AI правильно распознал позиции. Точные цены — в полном отчёте."
+              : "Детальное сравнение каждой позиции с рыночными ценами"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead>Работа</TableHead>
+                  <TableHead className="text-right">Подрядчик</TableHead>
+                  {!hasPaywall && (
                     <TableHead className="text-right">Рынок (ср.)</TableHead>
-                    <TableHead className="text-right">Переплата</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {overpayItems.slice(0, freePreviewCount).map((item, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{statusIcons[item.status]}</TableCell>
-                      <TableCell className="font-medium">{item.work}</TableCell>
-                      <TableCell className="text-right">
-                        {formatPrice(item.contractor_price)} руб./{item.unit}
-                      </TableCell>
-                      <TableCell className="text-right">
+                  )}
+                  <TableHead className="text-right">Оценка</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allItems.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{statusIcons[item.status]}</TableCell>
+                    <TableCell className="font-medium">{item.work}</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                      {formatPrice(item.contractor_price)} руб./{item.unit}
+                    </TableCell>
+                    {!hasPaywall && (
+                      <TableCell className="text-right whitespace-nowrap">
                         {formatPrice(item.market_avg)} руб./{item.unit}
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-red-600">
-                        +{item.overpay_percent}%
-                        <span className="block text-xs font-normal">
-                          {formatPrice(item.overpay_amount)} руб.
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-
-                  {/* Blurred/locked rows */}
-                  {!isPaid &&
-                    overpayItems.length > freePreviewCount &&
-                    overpayItems
-                      .slice(freePreviewCount, freePreviewCount + 2)
-                      .map((_, i) => (
-                        <TableRow key={`locked-${i}`} className="opacity-30">
-                          <TableCell>
-                            <Lock className="h-4 w-4" />
-                          </TableCell>
-                          <TableCell className="blur-sm">Работа скрыта</TableCell>
-                          <TableCell className="text-right blur-sm">
-                            *** руб.
-                          </TableCell>
-                          <TableCell className="text-right blur-sm">
-                            *** руб.
-                          </TableCell>
-                          <TableCell className="text-right blur-sm">
-                            +**%
-                          </TableCell>
-                        </TableRow>
-                      ))}
-
-                  {/* Show all if paid */}
-                  {isPaid &&
-                    overpayItems.slice(freePreviewCount).map((item, i) => (
-                      <TableRow key={`paid-${i}`}>
-                        <TableCell>{statusIcons[item.status]}</TableCell>
-                        <TableCell className="font-medium">
-                          {item.work}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatPrice(item.contractor_price)} руб./{item.unit}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatPrice(item.market_avg)} руб./{item.unit}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-red-600">
+                    )}
+                    <TableCell className="text-right whitespace-nowrap">
+                      {item.status === "ok" ? (
+                        <span className="text-green-600 font-medium">OK</span>
+                      ) : (
+                        <span className="font-semibold text-red-600">
                           +{item.overpay_percent}%
-                          <span className="block text-xs font-normal">
-                            {formatPrice(item.overpay_amount)} руб.
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-        </FadeIn>
-      )}
+                          {!hasPaywall && (
+                            <span className="block text-xs font-normal">
+                              {formatPrice(item.overpay_amount)} руб.
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+      </FadeIn>
 
-      {/* Paywall */}
-      {!isPaid && overpayItems.length > freePreviewCount && (
+      {/* Paywall block — for unpaid users */}
+      {hasPaywall && (
         <ScaleIn delay={0.3}>
-        <Card className="border-primary">
-          <CardContent className="py-8 text-center">
-            <Lock className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-bold mb-2">
-              Ещё {overpayItems.length - freePreviewCount + okItems.length} позиций скрыто
-            </h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Получите полный отчёт: детальный разбор каждой позиции, рыночные
-              цены (мин/средн/макс) и рекомендации для разговора с подрядчиком
-            </p>
-            <Button
-              size="lg"
-              className="text-lg px-8"
-              onClick={handlePay}
-              disabled={isPaymentLoading}
-            >
-              {isPaymentLoading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <ShieldCheck className="mr-2 h-5 w-5" />
-              )}
-              Получить полный отчёт — 990 руб.
-            </Button>
-            <p className="text-xs text-muted-foreground mt-3">
-              Разовый платёж. Безопасная оплата банковской картой.
-            </p>
+        <Card className="border-primary/30 bg-gradient-to-b from-background to-muted/30">
+          <CardContent className="pt-8 pb-8 px-6">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+                <ShieldCheck className="h-7 w-7 text-primary" />
+              </div>
+
+              <h3 className="text-xl font-bold mb-2">
+                {overpayItems.length > 0
+                  ? `Найдено ${overpayItems.length} завышенных позиций`
+                  : "Анализ завершён"}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+                Откройте полный отчёт: точная сумма переплаты, рыночные цены по каждой позиции и аргументы для торга с подрядчиком
+              </p>
+
+              {/* Benefits grid */}
+              <div className="grid grid-cols-2 gap-3 max-w-md mx-auto mb-6 text-left">
+                <div className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <span>Точная сумма переплаты</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <span>Рыночные цены для торга</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <span>Сравнение по каждой позиции</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                  <span>Рекомендации по экономии</span>
+                </div>
+              </div>
+
+              {/* Social proof */}
+              <div className="bg-muted/50 rounded-lg px-4 py-3 mb-6 max-w-md mx-auto">
+                <p className="text-sm italic text-muted-foreground">
+                  &laquo;Показал подрядчику отчёт — он сразу снизил цену на 40 000 руб.&raquo;
+                </p>
+              </div>
+
+              <Button
+                size="lg"
+                className="text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+                onClick={handlePay}
+                disabled={isPaymentLoading}
+              >
+                {isPaymentLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <ShieldCheck className="mr-2 h-5 w-5" />
+                )}
+                Получить полный отчёт — 990 руб.
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Разовый платёж &bull; Банковская карта &bull; Моментальный доступ
+              </p>
+            </div>
           </CardContent>
         </Card>
         </ScaleIn>

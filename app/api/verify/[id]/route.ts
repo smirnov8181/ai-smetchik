@@ -34,23 +34,28 @@ export async function GET(
 
   const admin = isAdminUser(user.email ?? undefined);
 
-  // Strip full result details if not paid and not admin (server-side paywall)
+  // Server-side paywall: show all items but strip market prices and recommendations
   if (!verification.is_paid && !admin && verification.result) {
-    const freePreviewCount = 3;
-    const result = verification.result as { items?: Array<Record<string, unknown>>; recommendations?: string[]; [key: string]: unknown };
+    const result = verification.result as { items?: Array<Record<string, unknown>>; recommendations?: string[]; summary?: string; total_market_avg?: number; total_overpay?: number; [key: string]: unknown };
     if (result.items && Array.isArray(result.items)) {
-      const overpayItems = result.items
-        .filter((i: Record<string, unknown>) => i.status !== "ok")
-        .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (b.overpay_amount as number) - (a.overpay_amount as number));
-      const okItems = result.items.filter((i: Record<string, unknown>) => i.status === "ok");
-
-      // Only include free preview items + redacted ok items count
-      const visibleItems = overpayItems.slice(0, freePreviewCount);
-      const hiddenCount = overpayItems.length - freePreviewCount + okItems.length;
-
-      result.items = visibleItems;
+      // Keep all items but remove market_avg and overpay_amount (keep status, overpay_percent, work, contractor_price, unit)
+      result.items = result.items.map((item: Record<string, unknown>) => ({
+        work: item.work,
+        unit: item.unit,
+        quantity: item.quantity,
+        contractor_price: item.contractor_price,
+        status: item.status,
+        overpay_percent: item.overpay_percent,
+        // Strip these from free version:
+        market_avg: 0,
+        market_min: 0,
+        market_max: 0,
+        overpay_amount: 0,
+      }));
       result.recommendations = [];
-      (result as Record<string, unknown>)._hiddenCount = hiddenCount > 0 ? hiddenCount : 0;
+      result.summary = "";
+      result.total_market_avg = 0;
+      result.total_overpay = 0;
     }
     verification.result = result;
   }

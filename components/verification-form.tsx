@@ -69,8 +69,8 @@ export function VerificationForm() {
         }
       }
 
-      // Step 2: Send lightweight JSON request
-      setUploadProgress("AI анализирует...");
+      // Step 2: Send API request and get verification ID from first SSE event, then redirect
+      setUploadProgress("Запускаем AI анализ...");
 
       const response = await fetch("/api/verify", {
         method: "POST",
@@ -87,7 +87,7 @@ export function VerificationForm() {
         throw new Error(errText || "Ошибка сервера");
       }
 
-      // Handle streaming response (SSE)
+      // Read only the first SSE event to get the verification ID, then redirect
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error("No response body");
@@ -95,22 +95,19 @@ export function VerificationForm() {
 
       const decoder = new TextDecoder();
       let verificationId = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
 
+      // Read first chunk to get the ID
+      const { done, value } = await reader.read();
+      if (!done && value) {
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n");
-
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.id) verificationId = data.id;
-              if (data.status === "error") {
-                if (data.error) {
-                  throw new Error(data.error);
-                }
+              if (data.status === "error" && data.error) {
+                throw new Error(data.error);
               }
             } catch (parseErr) {
               if (parseErr instanceof Error && parseErr.message !== "Unexpected end of JSON input") {
@@ -122,13 +119,13 @@ export function VerificationForm() {
       }
 
       if (verificationId) {
+        // Redirect immediately — the result page will poll for completion
         router.push(`/ru/dashboard/verify/${verificationId}`);
       } else {
         throw new Error("Не удалось создать проверку");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setIsSubmitting(false);
       setUploadProgress("");
     }

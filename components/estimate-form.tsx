@@ -70,8 +70,8 @@ export function EstimateForm() {
         }
       }
 
-      // Step 2: Send lightweight JSON request (no files in body)
-      setUploadProgress("AI анализирует...");
+      // Step 2: Send API request and get estimate ID from first SSE event, then redirect immediately
+      setUploadProgress("Запускаем AI анализ...");
 
       const response = await fetch("/api/estimates", {
         method: "POST",
@@ -88,7 +88,7 @@ export function EstimateForm() {
         throw new Error(errText || "Ошибка сервера");
       }
 
-      // Handle streaming response (SSE)
+      // Read only the first SSE event to get the estimate ID, then redirect
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error("No response body");
@@ -97,13 +97,11 @@ export function EstimateForm() {
       const decoder = new TextDecoder();
       let estimateId = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
+      // Read first chunk to get the ID
+      const { done, value } = await reader.read();
+      if (!done && value) {
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n");
-
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
@@ -122,13 +120,13 @@ export function EstimateForm() {
       }
 
       if (estimateId) {
+        // Redirect immediately — the result page will poll for completion
         router.push(`/ru/dashboard/estimates/${estimateId}`);
       } else {
         throw new Error("Не удалось создать смету");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setIsSubmitting(false);
       setUploadProgress("");
     }

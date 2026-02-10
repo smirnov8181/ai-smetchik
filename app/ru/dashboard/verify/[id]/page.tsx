@@ -4,23 +4,20 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { VerificationResult } from "@/components/verification-result";
-import { ParsedItemsTable } from "@/components/parsed-items-table";
+import { AnalysisProgress } from "@/components/analysis-progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, AlertCircle, ShieldCheck } from "lucide-react";
 import type {
   Verification,
   VerificationResult as VerificationResultType,
-  ContractorWorkItem,
 } from "@/lib/supabase/types";
 
 export default function VerificationDetailPage() {
@@ -127,38 +124,7 @@ export default function VerificationDetailPage() {
       </div>
 
       {verification.status === "processing" && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Анализируем смету подрядчика
-              </CardTitle>
-              <CardDescription>
-                {verification.parsed_items
-                  ? "Сравниваем цены с рыночными..."
-                  : "AI распознаёт позиции и извлекает цены..."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Progress
-                value={verification.parsed_items ? 70 : 30}
-                className="mb-2"
-              />
-              <p className="text-sm text-muted-foreground">
-                {verification.parsed_items
-                  ? `Распознано ${(verification.parsed_items as ContractorWorkItem[]).length} позиций, сравниваем с рынком...`
-                  : "Распознаём текст и позиции сметы..."}
-              </p>
-            </CardContent>
-          </Card>
-
-          {verification.parsed_items && (
-            <ParsedItemsTable
-              items={verification.parsed_items as ContractorWorkItem[]}
-            />
-          )}
-        </>
+        <AnalysisProgress type="verification" />
       )}
 
       {verification.status === "error" && (

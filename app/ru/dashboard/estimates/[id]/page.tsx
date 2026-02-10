@@ -4,18 +4,17 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EstimateResult } from "@/components/estimate-result";
+import { AnalysisProgress } from "@/components/analysis-progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import type {
   Estimate,
@@ -124,24 +123,7 @@ export default function EstimateDetailPage() {
       </div>
 
       {estimate.status === "processing" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Обработка сметы
-            </CardTitle>
-            <CardDescription>
-              AI анализирует ваши данные и составляет смету. Обычно это занимает
-              30-60 секунд.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Progress value={33} className="mb-2" />
-            <p className="text-sm text-muted-foreground">
-              Анализ данных и расчёт цен...
-            </p>
-          </CardContent>
-        </Card>
+        <AnalysisProgress type="estimate" />
       )}
 
       {estimate.status === "error" && (
