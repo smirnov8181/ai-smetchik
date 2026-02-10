@@ -700,7 +700,35 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
 
       {/* Summary Total - so user doesn't need to scroll up */}
       <Card className="bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-        <CardContent className="py-6">
+        <CardContent className="py-6 space-y-4">
+          {/* Material Tier Toggle */}
+          <div className="flex justify-center gap-2">
+            {(Object.keys(qualityTiers) as QualityTier[]).map((tier) => {
+              const isSelected = qualityTier === tier;
+              return (
+                <button
+                  key={tier}
+                  onClick={() => setQualityTier(tier)}
+                  className={`
+                    flex-1 max-w-[120px] py-2 px-3 rounded-xl text-center transition-all duration-200
+                    ${isSelected
+                      ? "bg-white dark:bg-slate-800 shadow-md ring-2 ring-primary/20 border border-primary/30"
+                      : "bg-slate-100/50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-transparent"
+                    }
+                  `}
+                >
+                  <div className={`text-xs font-semibold ${isSelected ? "text-primary" : "text-slate-500"}`}>
+                    {qualityTiers[tier].label}
+                  </div>
+                  <div className={`text-xs mt-0.5 ${isSelected ? "text-primary/70" : "text-slate-400"}`}>
+                    {formatPrice(tierPrices[tier])} ₽
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Total */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Итого по смете</p>
