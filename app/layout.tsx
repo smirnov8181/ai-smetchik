@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { EB_Garamond, Figtree } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { RegionProvider } from "@/lib/i18n/region-context";
 import "./globals.css";
 
-const ebGaramond = EB_Garamond({
-  variable: "--font-heading",
-  subsets: ["latin", "cyrillic"],
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
-const figtree = Figtree({
-  variable: "--font-body",
-  subsets: ["latin", "latin-ext"],
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <body
-        className={`${ebGaramond.variable} ${figtree.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
         <RegionProvider>{children}</RegionProvider>

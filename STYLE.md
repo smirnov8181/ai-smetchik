@@ -1,6 +1,6 @@
 # ContractorCheck Design System
 
-Wispr Flow–inspired. Premium, clean, serif + sans-serif pairing.
+Based on gethyped.nl style. Modern, bold, high-energy.
 
 ---
 
@@ -10,18 +10,19 @@ Wispr Flow–inspired. Premium, clean, serif + sans-serif pairing.
 
 | Name | Hex | Usage |
 |------|-----|-------|
-| **Background** | `#FFFFEB` | Page background (warm light yellow) |
-| **Primary (Dark Teal)** | `#034F46` | Dark sections, primary accent, icon backgrounds |
-| **Accent (Lavender)** | `#F0D7FF` | Primary CTA buttons, accent cards, highlights |
-| **Text Primary** | `#1A1A1A` | Headings, body text |
-| **Text Muted** | `#1A1A1A/50` | Secondary text, descriptions |
-| **Dark Section** | `#034F46` | Stats bar, CTA sections, contrast areas |
+| **Primary Blue** | `#0D8DFF` | Primary CTA buttons, links, accents |
+| **Accent Green** | `#33C791` | Success states, secondary CTA, savings |
+| **Secondary Orange** | `#FA5424` | Warnings, secondary buttons, highlights |
+| **Background** | `#FAF4EC` | Page background (warm cream) |
+| **Text Primary** | `#161616` | Headings, body text |
+| **Text Muted** | `#161616/50` | Secondary text, descriptions |
+| **Dark Section** | `#161616` | Footer, stats bar, contrast sections |
 
 ### Semantic Colors
 
 | State | Color | Hex |
 |-------|-------|-----|
-| Success / Fair | Dark Teal | `#034F46` |
+| Success / Fair | Green | `#33C791` |
 | Warning / Slight overcharge | Orange | `#FA5424` |
 | Error / Major overcharge | Red | `#EF4444` (red-500) |
 
@@ -29,45 +30,28 @@ Wispr Flow–inspired. Premium, clean, serif + sans-serif pairing.
 
 ## Typography
 
-### Font Families
+### Font Family
 
 ```css
-/* Headings — EB Garamond (serif) */
-font-family: var(--font-heading), Georgia, serif;
-
-/* Body — Figtree (sans-serif) */
-font-family: var(--font-body), system-ui, sans-serif;
-```
-
-### CSS Utilities
-
-```css
-.font-heading { font-family: var(--font-heading), Georgia, serif; }
+font-family: Inter, system-ui, sans-serif;
 ```
 
 ### Scale
 
-| Element | Size (Mobile) | Size (Desktop) | Weight | Font |
-|---------|---------------|----------------|--------|------|
-| H1 Hero | 48px (3rem) | 96-120px | 400 | EB Garamond |
-| H2 Section | 36px (2.25rem) | 48-64px | 400 | EB Garamond |
-| H3 Card | 20-24px | 24px | 600 | EB Garamond |
-| Body Large | 20px | 24px | 400 | Figtree |
-| Body | 18px | 18-20px | 400 | Figtree |
-| Small/Label | 14px | 14px | 500-600 | Figtree |
-
-### Italic Accent
-
-Use `<em>` with EB Garamond italic for emphasis in headings:
-
-```tsx
-<em className="italic text-[#034F46]">home renovation</em>
-```
+| Element | Size (Mobile) | Size (Desktop) | Weight |
+|---------|---------------|----------------|--------|
+| H1 Hero | 48px (3rem) | 72px (4.5rem) | 700 |
+| H2 Section | 36px (2.25rem) | 56px (3.5rem) | 700 |
+| H3 Card | 24px (1.5rem) | 24px (1.5rem) | 700 |
+| Body Large | 20px (1.25rem) | 24px (1.5rem) | 400 |
+| Body | 16px (1rem) | 16px (1rem) | 400 |
+| Small/Label | 14px (0.875rem) | 14px | 500-600 |
+| Tiny/Tag | 12px (0.75rem) | 12px | 600 |
 
 ### Line Height
 
-- Headings: `1.05`
-- Body: `1.5` (relaxed)
+- Headings: `1.1`
+- Body: `1.5`
 
 ---
 
@@ -92,29 +76,36 @@ Base unit: `4px`
 
 | Element | Radius | Tailwind |
 |---------|--------|----------|
-| Buttons | 12px | `rounded-xl` |
-| Cards | 14px | `rounded-[14px]` |
-| Inner cards | 10px | `rounded-[10px]` |
+| Buttons | 40px (full) | `rounded-full` |
+| Cards | 24px | `rounded-3xl` |
+| Inputs | 12px | `rounded-xl` |
 | Tags/Badges | 9999px | `rounded-full` |
-| Icons | 12px | `rounded-xl` |
-| Logo | 12px | `rounded-xl` |
+| Icons | 12-16px | `rounded-xl` / `rounded-2xl` |
 
 ---
 
 ## Buttons
 
-### Primary (Lavender)
+### Primary (Blue)
 
 ```html
-<button class="cursor-pointer bg-[#F0D7FF] border border-[#1A1A1A] text-[#1A1A1A] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all">
+<button class="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all">
   Button Text
 </button>
 ```
 
-### Secondary (Outline)
+### Secondary (Green)
 
 ```html
-<button class="cursor-pointer bg-[#FFFFEB] border border-[#1A1A1A] text-[#1A1A1A] font-semibold px-8 py-4 rounded-xl hover:bg-[#1A1A1A]/5 transition-all">
+<button class="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all">
+  Button Text
+</button>
+```
+
+### Tertiary (Orange)
+
+```html
+<button class="cursor-pointer bg-[#FA5424] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all">
   Button Text
 </button>
 ```
@@ -122,7 +113,7 @@ Base unit: `4px`
 ### Ghost (Text only)
 
 ```html
-<button class="cursor-pointer text-[#1A1A1A]/70 hover:text-[#1A1A1A] font-medium px-4 py-2 transition-colors">
+<button class="cursor-pointer text-[#161616]/70 hover:text-[#161616] font-medium px-4 py-2 transition-colors">
   Button Text
 </button>
 ```
@@ -136,15 +127,6 @@ Base unit: `4px`
 </button>
 ```
 
-### Diagonal Arrow (CTA)
-
-```html
-<button class="group ... inline-flex items-center gap-2">
-  Text
-  <ArrowUpRight class="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-</button>
-```
-
 ---
 
 ## Cards
@@ -152,23 +134,23 @@ Base unit: `4px`
 ### Default Card
 
 ```html
-<div class="p-8 rounded-[14px] bg-white border border-[#1A1A1A]/10 hover:-translate-y-1 transition-all duration-300">
+<div class="p-8 rounded-3xl bg-white border border-[#161616]/10 hover:-translate-y-2 transition-all duration-300">
   <!-- content -->
 </div>
 ```
 
-### Warning Card
+### Colored Card (Success)
 
 ```html
-<div class="p-8 rounded-[14px] bg-[#FA5424]/5 border border-[#FA5424]/20">
+<div class="p-8 rounded-3xl bg-[#33C791]/10 border-2 border-[#33C791]/20">
   <!-- content -->
 </div>
 ```
 
-### Accent Card (Lavender)
+### Colored Card (Warning)
 
 ```html
-<div class="p-8 rounded-[14px] bg-[#F0D7FF]/20 border border-[#F0D7FF]">
+<div class="p-8 rounded-3xl bg-[#FA5424]/10 border-2 border-[#FA5424]/20">
   <!-- content -->
 </div>
 ```
@@ -177,62 +159,34 @@ Base unit: `4px`
 
 ## Shadows
 
-Minimal shadows. Prefer clean borders:
-
 ```css
-/* No shadow on cards by default — use border only */
-border border-[#1A1A1A]/10
+/* Card shadow */
+shadow-2xl shadow-[#161616]/10
 
-/* Only where needed */
-shadow-lg shadow-[#1A1A1A]/5
+/* Subtle shadow */
+shadow-lg shadow-[#161616]/5
 ```
 
 ---
 
-## Animations (CSS only)
-
-### Fade-in on Scroll
-
-```css
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out both;
-}
-```
-
-### IntersectionObserver (React)
-
-```tsx
-/* useInView hook → toggle classes */
-opacity-0 translate-y-6 → opacity-100 translate-y-0
-transition-all duration-700
-```
-
-### Staggered Reveal
-
-```css
-style={{ transitionDelay: `${i * 100}ms` }}
-```
+## Animations
 
 ### Hover Lift
 
 ```css
-hover:-translate-y-1 transition-all duration-300
+hover:-translate-y-2 transition-transform duration-300
 ```
 
 ### Hover Scale (Icons)
 
 ```css
-group-hover:scale-105 transition-transform
+group-hover:scale-110 transition-transform
 ```
 
-### Arrow Diagonal
+### Arrow Slide
 
 ```css
-group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform
+group-hover:translate-x-1 transition-transform
 ```
 
 ### Pulse (Status dot)
@@ -245,7 +199,7 @@ animate-pulse
 
 - Fast: `150ms`
 - Default: `300ms`
-- Slow: `700ms` (scroll reveals)
+- Slow: `500ms`
 
 ---
 
@@ -260,8 +214,8 @@ animate-pulse
 ### Section Padding
 
 ```css
-py-24 md:py-32  /* Large sections */
-py-16           /* Smaller sections (stats) */
+py-24  /* 96px vertical */
+py-16  /* 64px for smaller sections */
 ```
 
 ### Grid
@@ -273,21 +227,20 @@ py-16           /* Smaller sections (stats) */
 <!-- 3 columns -->
 <div class="grid md:grid-cols-3 gap-8">
 
-<!-- 4 columns (steps) -->
-<div class="grid md:grid-cols-4 gap-8">
+<!-- 4 columns (stats) -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
 ```
 
 ---
 
 ## Dark Sections
 
-Use teal instead of black for contrast sections:
+For contrast sections (stats, footer, CTA):
 
 ```html
-<section class="py-24 bg-[#034F46] text-white">
+<section class="py-16 bg-[#161616] text-white">
   <!-- Use text-white/50 for muted text -->
-  <!-- Use border-white/10 for borders -->
-  <!-- Use bg-white/5 for card backgrounds -->
+  <!-- Use border-white/20 for borders -->
 </section>
 ```
 
@@ -298,7 +251,7 @@ Use teal instead of black for contrast sections:
 Using **Lucide React**:
 
 ```tsx
-import { ArrowRight, Shield, Clock } from "lucide-react";
+import { ArrowRight, Shield, Clock, Lock } from "lucide-react";
 
 // Standard size
 <Icon className="w-5 h-5" />
@@ -306,11 +259,8 @@ import { ArrowRight, Shield, Clock } from "lucide-react";
 // Large (in cards)
 <Icon className="w-8 h-8" />
 
-// With teal color
-<Icon className="w-4 h-4 text-[#034F46]" />
-
-// On dark bg (lavender)
-<Icon className="w-7 h-7 text-[#F0D7FF]" />
+// With color
+<Icon className="w-4 h-4 text-[#33C791]" />
 ```
 
 ---
@@ -319,10 +269,15 @@ import { ArrowRight, Shield, Clock } from "lucide-react";
 
 ```html
 <!-- Status badge -->
-<div class="inline-flex items-center gap-2 bg-[#034F46]/5 rounded-full px-4 py-2">
-  <span class="w-2 h-2 rounded-full bg-[#034F46] animate-pulse" />
-  <span class="text-sm font-medium text-[#1A1A1A]/70">AI-powered</span>
+<div class="inline-flex items-center gap-2 bg-[#161616]/5 rounded-full px-4 py-2">
+  <span class="w-2 h-2 rounded-full bg-[#33C791] animate-pulse" />
+  <span class="text-sm font-medium">Label</span>
 </div>
+
+<!-- City tag -->
+<span class="px-5 py-2 rounded-full border border-white/20 text-white/70 text-sm">
+  Phoenix
+</span>
 ```
 
 ---
@@ -341,24 +296,18 @@ import { ArrowRight, Shield, Clock } from "lucide-react";
 
 ## Do's and Don'ts
 
-### Do
+### Do ✓
 
 - Use `cursor-pointer` on all interactive elements
-- Use `font-heading` (EB Garamond) for all headings
-- Use italic `<em>` for accent words in headings
 - Add hover states with smooth transitions
-- Use semantic color coding (teal=good, orange=warning, red=bad)
-- Use warm yellow background `#FFFFEB`
-- Keep buttons `rounded-xl` (12px)
-- Keep cards `rounded-[14px]` (14px)
-- Use clean borders over heavy shadows
+- Use semantic color coding (green=good, orange=warning, red=bad)
+- Keep buttons rounded-full (pill shape)
+- Use warm cream background `#FAF4EC`
 
-### Don't
+### Don't ✗
 
-- No `rounded-full` on action buttons (only badges/pills)
-- No pure white `#FFFFFF` page backgrounds (use `#FFFFEB`)
-- No `#161616` dark sections (use `#034F46` teal)
-- No `#0D8DFF` blue (replaced by `#034F46` teal)
-- No `#33C791` green accents (replaced by `#F0D7FF` lavender)
-- No heavy shadows (`shadow-2xl`) — use subtle borders
+- No sharp corners on buttons (always pill)
+- No pure white `#FFFFFF` backgrounds (use `#FAF4EC`)
+- No emojis as icons (use Lucide)
+- No shadows on dark sections
 - Don't forget `transition-*` on hover effects
