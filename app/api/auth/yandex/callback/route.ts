@@ -15,7 +15,9 @@ import { cookies } from "next/headers";
  * 6. Verify OTP to set session cookies, redirect to dashboard
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const url = new URL(request.url);
+  const { searchParams } = url;
+  const origin = url.origin;
   const code = searchParams.get("code");
 
   if (!code) {
@@ -36,6 +38,7 @@ export async function GET(request: Request) {
 
   try {
     // Step 1: Exchange authorization code for access token
+    const redirectUri = `${origin}/api/auth/yandex/callback`;
     const tokenRes = await fetch("https://oauth.yandex.ru/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -44,6 +47,7 @@ export async function GET(request: Request) {
         code,
         client_id: clientId,
         client_secret: clientSecret,
+        redirect_uri: redirectUri,
       }),
     });
 
@@ -86,30 +90,25 @@ export async function GET(request: Request) {
     // Step 3: Create or find user via Supabase Admin API
     const supabaseAdmin = createServiceClient();
 
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email === email
-    );
+    // Try to create user — if already exists, that's fine (they registered via email/Google)
+    const randomPassword = crypto.randomUUID() + crypto.randomUUID();
+    const { error: createError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: randomPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: displayName,
+          provider: "yandex",
+        },
+      });
 
-    if (!existingUser) {
-      const randomPassword = crypto.randomUUID() + crypto.randomUUID();
-      const { error: createError } =
-        await supabaseAdmin.auth.admin.createUser({
-          email,
-          password: randomPassword,
-          email_confirm: true,
-          user_metadata: {
-            full_name: displayName,
-            provider: "yandex",
-          },
-        });
-
-      if (createError) {
-        console.error("Supabase create user failed:", createError);
-        return NextResponse.redirect(
-          `${origin}/ru/login?error=yandex_create`
-        );
-      }
+    // Only fail if it's NOT a "user already exists" error
+    if (createError && !createError.message?.includes("already been registered")) {
+      console.error("Supabase create user failed:", createError);
+      return NextResponse.redirect(
+        `${origin}/ru/login?error=yandex_create`
+      );
     }
 
     // Step 4: Generate magic link OTP
@@ -127,6 +126,13 @@ export async function GET(request: Request) {
     }
 
     // Step 5: Verify OTP server-side to set session cookies
+    // We collect cookies manually and set them on the redirect response
+    const pendingCookies: Array<{
+      name: string;
+      value: string;
+      options: Record<string, unknown>;
+    }> = [];
+
     const cookieStore = await cookies();
     const supabaseWithCookies = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -137,13 +143,16 @@ export async function GET(request: Request) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
+            cookiesToSet.forEach((cookie) => {
+              pendingCookies.push(cookie);
+            });
           },
         },
       }
     );
+
+    // Sign out any existing session first (e.g. anonymous or other user)
+    await supabaseWithCookies.auth.signOut();
 
     const { error: verifyError } = await supabaseWithCookies.auth.verifyOtp({
       email,
@@ -158,8 +167,15 @@ export async function GET(request: Request) {
       );
     }
 
-    // Step 6: Redirect to dashboard
-    return NextResponse.redirect(`${origin}/ru/dashboard`);
+    // Step 6: Redirect to dashboard with session cookies
+    const response = NextResponse.redirect(`${origin}/ru/dashboard`);
+
+    // Explicitly set all cookies on the response
+    for (const { name, value, options } of pendingCookies) {
+      response.cookies.set(name, value, options as Record<string, string>);
+    }
+
+    return response;
   } catch (err) {
     console.error("Yandex OAuth error:", err);
     return NextResponse.redirect(
