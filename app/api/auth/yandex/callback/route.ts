@@ -112,8 +112,8 @@ export async function GET(request: Request) {
     }
 
     // action_link is on the raw response but TS types put it under properties
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const actionLink: string | undefined =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (linkData as any)?.action_link ||
       linkData?.properties?.action_link;
 

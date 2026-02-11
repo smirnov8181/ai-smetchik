@@ -41,6 +41,7 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
     let script = document.getElementById(scriptId) as HTMLScriptElement | null;
 
     function initSdk() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const YaAuthSuggest = (window as any).YaAuthSuggest;
       if (!YaAuthSuggest) return;
 
@@ -61,7 +62,9 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
           buttonIcon: "ya",
         }
       )
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then(({ handler }: { handler: () => Promise<any> }) => handler())
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then(async (data: any) => {
           // data contains { access_token, token_type, ... }
           const accessToken = data?.access_token;
@@ -90,6 +93,7 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
           router.push("/ru/dashboard");
           router.refresh();
         })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((err: any) => {
           console.error("YaAuthSuggest error:", err);
           setError(true);
@@ -104,6 +108,7 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
       script.async = true;
       script.onload = initSdk;
       document.head.appendChild(script);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } else if ((window as any).YaAuthSuggest) {
       initSdk();
     } else {
