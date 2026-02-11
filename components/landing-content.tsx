@@ -455,20 +455,6 @@ export function LandingContent() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 bg-[#FAF4EC] border-t border-[#161616]/10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#161616] rounded-lg flex items-center justify-center">
-                <FileText className="h-4 w-4 text-[#FAF4EC]" />
-              </div>
-              <span className="font-bold">AI Сметчик</span>
-            </div>
-            <p className="text-sm text-[#161616]/40">&copy; 2025 AI Сметчик. Все права защищены.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

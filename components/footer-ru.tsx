@@ -1,23 +1,28 @@
 import Link from "next/link";
-import { Mail, Send } from "lucide-react";
+import { FileText, Mail, Send } from "lucide-react";
 
 export function FooterRu() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-12 border-t border-[#161616]/5 bg-white/50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+    <footer className="border-t border-[#161616]/5 bg-[#FCFBF7]">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
           {/* Brand + copyright */}
-          <div className="space-y-2">
-            <p className="font-semibold text-[#161616]">AI Сметчик</p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-[#161616] rounded-xl flex items-center justify-center">
+                <FileText className="h-4 w-4 text-[#FCFBF7]" />
+              </div>
+              <span className="font-bold text-lg text-[#161616]">AI Сметчик</span>
+            </div>
             <p className="text-sm text-[#161616]/40">
               &copy; {currentYear} ContractorCheck. Все права защищены.
             </p>
           </div>
 
           {/* Legal links */}
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <p className="text-sm font-medium text-[#161616]/60">Документы</p>
             <nav className="flex flex-col gap-1.5">
               <Link
@@ -42,7 +47,7 @@ export function FooterRu() {
           </div>
 
           {/* Support */}
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <p className="text-sm font-medium text-[#161616]/60">Поддержка</p>
             <nav className="flex flex-col gap-1.5">
               <a

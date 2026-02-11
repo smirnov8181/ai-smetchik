@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, Share2 } from "lucide-react";
+import { FooterRu } from "@/components/footer-ru";
 import type { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
 
 interface SharedEstimate {
@@ -57,7 +58,7 @@ export default function SharedEstimatePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#FAF4EC]">
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-64 w-full" />
@@ -69,7 +70,7 @@ export default function SharedEstimatePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#FAF4EC] flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardContent className="py-12 text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
@@ -87,8 +88,8 @@ export default function SharedEstimatePage() {
   if (!estimate) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-[#FAF4EC] flex flex-col">
+      <div className="flex-1 max-w-4xl mx-auto p-6 space-y-6 w-full">
         {/* Header */}
         <Card>
           <CardHeader>
@@ -129,12 +130,15 @@ export default function SharedEstimatePage() {
             <p className="text-muted-foreground mb-4">
               Хотите создать свою смету на ремонт?
             </p>
-            <Link href="/ru/register">
-              <Button>Создать бесплатно</Button>
+            <Link href="/ru/dashboard/estimates/new">
+              <Button className="bg-[#33C791] text-[#161616] hover:bg-[#33C791]/90">
+                Попробовать бесплатно
+              </Button>
             </Link>
           </CardContent>
         </Card>
       </div>
+      <FooterRu />
     </div>
   );
 }

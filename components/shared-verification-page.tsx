@@ -136,9 +136,9 @@ export function SharedVerificationContent({ token }: { token: string }) {
             <p className="text-muted-foreground mb-4">
               Хотите проверить свою смету на завышенные цены?
             </p>
-            <Link href="/ru/register">
+            <Link href="/ru/dashboard/verify/new">
               <Button className="bg-[#33C791] text-[#161616] hover:bg-[#33C791]/90">
-                Проверить бесплатно
+                Попробовать бесплатно
               </Button>
             </Link>
           </CardContent>
