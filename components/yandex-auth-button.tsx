@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -22,7 +21,6 @@ interface YandexAuthButtonProps {
 }
 
 export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const initedRef = useRef(false);
@@ -94,8 +92,8 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
             return;
           }
 
-          router.push("/ru/dashboard");
-          router.refresh();
+          // Full page reload to ensure cookies are sent with the request
+          window.location.href = "/ru/dashboard";
         })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((err: any) => {
@@ -120,7 +118,7 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
     } else {
       script.addEventListener("load", initSdk);
     }
-  }, [clientId, containerId, router]);
+  }, [clientId, containerId]);
 
   if (!clientId) return null;
 
