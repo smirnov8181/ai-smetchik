@@ -207,16 +207,16 @@ export function LandingContent() {
       </section>
 
       {/* Stats */}
-      <section className="py-12">
-        <div className="max-w-5xl mx-auto px-6">
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4" staggerDelay={0.15}>
+      <section className="py-16 bg-[#161616]">
+        <div className="max-w-7xl mx-auto px-6">
+          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8" staggerDelay={0.15}>
             {stats.map((stat, i) => (
               <StaggerItem key={i}>
-                <div className="text-center bg-white rounded-2xl p-6 border border-[#161616]/5 shadow-sm">
-                  <div className="text-3xl md:text-4xl font-bold text-[#161616] mb-1">
+                <div className="text-center">
+                  <div className="text-4xl md:text-5xl font-bold text-white mb-2">
                     <CountUp value={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div className="text-[#161616]/40 text-sm">{stat.label}</div>
+                  <div className="text-white/50 text-sm">{stat.label}</div>
                 </div>
               </StaggerItem>
             ))}
