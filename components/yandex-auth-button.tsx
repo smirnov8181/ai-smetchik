@@ -124,12 +124,15 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
 
   if (loading) {
     return (
-      <div className="w-full flex items-center justify-center py-4">
-        <Loader2 className="w-5 h-5 animate-spin text-[#161616]/40" />
-        <span className="ml-2 text-sm text-[#161616]/50">
-          Входим через Яндекс...
-        </span>
-      </div>
+      <>
+        {/* Full-screen overlay so the user doesn't see the login form */}
+        <div className="fixed inset-0 z-50 bg-[#FAF4EC] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-[#161616]/40 mx-auto mb-4" />
+            <p className="text-[#161616]/50">Входим через Яндекс...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
