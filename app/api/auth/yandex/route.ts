@@ -9,7 +9,7 @@ import { createServerClient } from "@supabase/ssr";
  * Receives a Yandex OAuth access_token from the client (SDK flow).
  * 1. Fetches user info from Yandex API
  * 2. Creates or finds user in Supabase via admin API
- * 3. Signs in the user by setting a session cookie via magic link OTP
+ * 3. Generates magic link → gets email_otp → verifyOtp to set session
  */
 export async function POST(request: Request) {
   try {
@@ -48,46 +48,42 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 2: Create or find user in Supabase
+    // Step 2: Create user if not exists
     const supabaseAdmin = createServiceClient();
 
-    const { data: existingUsers } =
-      await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u) => u.email === email
-    );
+    const randomPassword = crypto.randomUUID() + crypto.randomUUID();
+    const { error: createError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: randomPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: displayName,
+          provider: "yandex",
+        },
+      });
 
-    if (!existingUser) {
-      // Create new user
-      const randomPassword = crypto.randomUUID() + crypto.randomUUID();
-      const { error: createError } =
-        await supabaseAdmin.auth.admin.createUser({
-          email,
-          password: randomPassword,
-          email_confirm: true,
-          user_metadata: {
-            full_name: displayName,
-            provider: "yandex",
-          },
-        });
-
-      if (createError) {
-        console.error("Supabase create user failed:", createError);
-        return NextResponse.json(
-          { error: "Failed to create user" },
-          { status: 500 }
-        );
-      }
+    // Ignore "already registered" — user exists from email/Google signup
+    if (
+      createError &&
+      !createError.message?.includes("already been registered")
+    ) {
+      console.error("Supabase create user failed:", createError);
+      return NextResponse.json(
+        { error: "Failed to create user" },
+        { status: 500 }
+      );
     }
 
-    // Step 3: Generate magic link and sign in
+    // Step 3: Generate magic link to get email_otp
+    // The Supabase admin API returns email_otp at the top level (not in TS types)
     const { data: linkData, error: linkError } =
       await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
       });
 
-    if (linkError || !linkData?.properties?.hashed_token) {
+    if (linkError || !linkData) {
       console.error("Generate link failed:", linkError);
       return NextResponse.json(
         { error: "Failed to generate login link" },
@@ -95,7 +91,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 4: Verify the OTP to create a session and set cookies
+    // email_otp is on the raw API response but not in TS types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const emailOtp: string | undefined = (linkData as any).email_otp;
+
+    if (!emailOtp) {
+      console.error("No email_otp in generateLink response");
+      return NextResponse.json(
+        { error: "Failed to generate OTP" },
+        { status: 500 }
+      );
+    }
+
+    // Step 4: Verify OTP to create session and set cookies
     const cookieStore = await cookies();
     const supabaseWithCookies = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,9 +122,12 @@ export async function POST(request: Request) {
       }
     );
 
+    // Sign out existing session first (e.g. anonymous)
+    await supabaseWithCookies.auth.signOut();
+
     const { error: verifyError } = await supabaseWithCookies.auth.verifyOtp({
       email,
-      token: linkData.properties.hashed_token,
+      token: emailOtp,
       type: "magiclink",
     });
 

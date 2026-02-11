@@ -1,34 +1,143 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+
+/**
+ * Yandex OAuth button using the official Yandex ID SDK.
+ *
+ * Flow:
+ * 1. Load sdk-suggest-with-polyfills-latest.js
+ * 2. YaAuthSuggest.init() renders Yandex button into a container
+ * 3. User clicks the Yandex button → popup/iframe auth
+ * 4. Token comes back via postMessage from /yandex-token.html
+ * 5. We POST the access_token to /api/auth/yandex → Supabase session
+ * 6. Redirect to dashboard
+ */
+
 interface YandexAuthButtonProps {
-  label?: string;
+  /** Height of the container for the Yandex button */
+  height?: number;
 }
 
-export function YandexAuthButton({
-  label = "Войти через Яндекс",
-}: YandexAuthButtonProps) {
+export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const containerId = useRef(
+    `ya-auth-${Math.random().toString(36).slice(2, 8)}`
+  ).current;
+
   const clientId = process.env.NEXT_PUBLIC_YANDEX_CLIENT_ID;
+
+  useEffect(() => {
+    if (!clientId) return;
+
+    const origin = window.location.origin;
+
+    // Load Yandex SDK
+    const scriptId = "ya-sdk-suggest";
+    let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+
+    function initSdk() {
+      const YaAuthSuggest = (window as any).YaAuthSuggest;
+      if (!YaAuthSuggest) return;
+
+      YaAuthSuggest.init(
+        {
+          client_id: clientId,
+          response_type: "token",
+          redirect_uri: `${origin}/yandex-token.html`,
+        },
+        origin,
+        {
+          view: "button",
+          parentId: containerId,
+          buttonView: "main",
+          buttonTheme: "light",
+          buttonSize: "m",
+          buttonBorderRadius: 12,
+          buttonIcon: "ya",
+        }
+      )
+        .then(({ handler }: { handler: () => Promise<any> }) => handler())
+        .then(async (data: any) => {
+          // data contains { access_token, token_type, ... }
+          const accessToken = data?.access_token;
+          if (!accessToken) {
+            console.error("Yandex SDK: no access_token", data);
+            setError(true);
+            return;
+          }
+
+          setLoading(true);
+
+          // Send token to our API
+          const res = await fetch("/api/auth/yandex", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: accessToken }),
+          });
+
+          if (!res.ok) {
+            console.error("Yandex auth API error:", await res.text());
+            setError(true);
+            setLoading(false);
+            return;
+          }
+
+          router.push("/ru/dashboard");
+          router.refresh();
+        })
+        .catch((err: any) => {
+          console.error("YaAuthSuggest error:", err);
+          setError(true);
+        });
+    }
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.src =
+        "https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js";
+      script.async = true;
+      script.onload = initSdk;
+      document.head.appendChild(script);
+    } else if ((window as any).YaAuthSuggest) {
+      initSdk();
+    } else {
+      script.addEventListener("load", initSdk);
+    }
+  }, [clientId, containerId, router]);
 
   if (!clientId) return null;
 
-  const handleClick = () => {
-    const origin = window.location.origin;
-    const redirectUri = `${origin}/api/auth/yandex/callback`;
-    window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-  };
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center py-4">
+        <Loader2 className="w-5 h-5 animate-spin text-[#161616]/40" />
+        <span className="ml-2 text-sm text-[#161616]/50">
+          Входим через Яндекс...
+        </span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full text-center py-3">
+        <p className="text-sm text-[#FA5424]">
+          Не удалось войти через Яндекс
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <button
-      onClick={handleClick}
-      className="cursor-pointer w-full bg-white border-2 border-[#161616]/10 text-[#161616] font-semibold py-4 rounded-xl hover:bg-[#FAF4EC] transition-all flex items-center justify-center gap-3"
-    >
-      <svg className="w-5 h-5" viewBox="0 0 24 24">
-        <path
-          fill="#FC3F1D"
-          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.77 14.63h-2.2V7.38h1.14c2.07 0 3.15 1.05 3.15 2.73 0 1.21-.6 2.07-1.72 2.56l2.24 3.96h-2.37l-1.9-3.57h-.53v3.57h.19zm-1.97-5.26h.73c1.09 0 1.68-.55 1.68-1.42 0-.88-.59-1.38-1.68-1.38h-.73v2.8z"
-        />
-      </svg>
-      {label}
-    </button>
+    <div
+      id={containerId}
+      style={{ height, width: "100%", overflow: "hidden", borderRadius: 12 }}
+    />
   );
 }

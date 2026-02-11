@@ -41,6 +41,18 @@ export default function RegisterPage() {
       return;
     }
 
+    // Try to sign in immediately (works when email confirmation is disabled)
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!signInError) {
+      router.push("/ru/dashboard");
+      return;
+    }
+
+    // If sign-in failed (email confirmation required), show confirmation screen
     setSuccess(true);
     setLoading(false);
   };
@@ -181,7 +193,7 @@ export default function RegisterPage() {
               Зарегистрироваться через Google
             </button>
 
-            <YandexAuthButton label="Зарегистрироваться через Яндекс" />
+            <YandexAuthButton />
           </div>
 
           <p className="text-sm text-center text-[#161616]/50 mt-6">

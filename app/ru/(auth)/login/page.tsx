@@ -242,7 +242,7 @@ export default function LoginPage() {
                   Войти через Google
                 </button>
 
-                <YandexAuthButton label="Войти через Яндекс" />
+                <YandexAuthButton />
               </div>
             </>
           )}

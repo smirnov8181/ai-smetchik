@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 
 /**
  * Yandex OAuth callback handler.
@@ -12,33 +10,27 @@ import { cookies } from "next/headers";
  * 3. We exchange code → access_token via Yandex API
  * 4. Fetch user info (email, name) from Yandex
  * 5. Create or find Supabase user via admin API
- * 6. Verify OTP to set session cookies, redirect to dashboard
+ * 6. Generate magic link → redirect to Supabase verify → client handler sets session
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const { searchParams } = url;
   const origin = url.origin;
-  const code = searchParams.get("code");
+  const code = url.searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect(
-      `${origin}/ru/login?error=yandex_no_code`
-    );
+    return NextResponse.redirect(`${origin}/ru/login?error=yandex_no_code`);
   }
 
   const clientId = process.env.NEXT_PUBLIC_YANDEX_CLIENT_ID;
   const clientSecret = process.env.YANDEX_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    console.error("Yandex OAuth: missing NEXT_PUBLIC_YANDEX_CLIENT_ID or YANDEX_CLIENT_SECRET");
-    return NextResponse.redirect(
-      `${origin}/ru/login?error=yandex_config`
-    );
+    console.error("Yandex OAuth: missing env vars");
+    return NextResponse.redirect(`${origin}/ru/login?error=yandex_config`);
   }
 
   try {
-    // Step 1: Exchange authorization code for access token
-    const redirectUri = `${origin}/api/auth/yandex/callback`;
+    // Step 1: Exchange authorization code for Yandex access token
     const tokenRes = await fetch("https://oauth.yandex.ru/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -47,16 +39,13 @@ export async function GET(request: Request) {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirectUri,
       }),
     });
 
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
       console.error("Yandex token exchange failed:", err);
-      return NextResponse.redirect(
-        `${origin}/ru/login?error=yandex_token`
-      );
+      return NextResponse.redirect(`${origin}/ru/login?error=yandex_token`);
     }
 
     const tokenData = await tokenRes.json();
@@ -69,9 +58,7 @@ export async function GET(request: Request) {
 
     if (!userRes.ok) {
       console.error("Yandex user info failed:", await userRes.text());
-      return NextResponse.redirect(
-        `${origin}/ru/login?error=yandex_user`
-      );
+      return NextResponse.redirect(`${origin}/ru/login?error=yandex_user`);
     }
 
     const yandexUser = await userRes.json();
@@ -82,15 +69,12 @@ export async function GET(request: Request) {
 
     if (!email) {
       console.error("Yandex OAuth: no email returned", yandexUser);
-      return NextResponse.redirect(
-        `${origin}/ru/login?error=yandex_no_email`
-      );
+      return NextResponse.redirect(`${origin}/ru/login?error=yandex_no_email`);
     }
 
-    // Step 3: Create or find user via Supabase Admin API
+    // Step 3: Create user if not exists (ignore "already registered")
     const supabaseAdmin = createServiceClient();
 
-    // Try to create user — if already exists, that's fine (they registered via email/Google)
     const randomPassword = crypto.randomUUID() + crypto.randomUUID();
     const { error: createError } =
       await supabaseAdmin.auth.admin.createUser({
@@ -103,83 +87,47 @@ export async function GET(request: Request) {
         },
       });
 
-    // Only fail if it's NOT a "user already exists" error
-    if (createError && !createError.message?.includes("already been registered")) {
+    if (
+      createError &&
+      !createError.message?.includes("already been registered")
+    ) {
       console.error("Supabase create user failed:", createError);
-      return NextResponse.redirect(
-        `${origin}/ru/login?error=yandex_create`
-      );
+      return NextResponse.redirect(`${origin}/ru/login?error=yandex_create`);
     }
 
-    // Step 4: Generate magic link OTP
+    // Step 4: Generate magic link
+    // The admin API returns action_link at the top level (not in properties)
     const { data: linkData, error: linkError } =
       await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
+        options: {
+          redirectTo: `${origin}/auth/yandex-session`,
+        },
       });
 
-    if (linkError || !linkData?.properties?.hashed_token) {
+    if (linkError) {
       console.error("Supabase generate link failed:", linkError);
-      return NextResponse.redirect(
-        `${origin}/ru/login?error=yandex_link`
-      );
+      return NextResponse.redirect(`${origin}/ru/login?error=yandex_link`);
     }
 
-    // Step 5: Verify OTP server-side to set session cookies
-    // We collect cookies manually and set them on the redirect response
-    const pendingCookies: Array<{
-      name: string;
-      value: string;
-      options: Record<string, unknown>;
-    }> = [];
+    // action_link is on the raw response but TS types put it under properties
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const actionLink: string | undefined =
+      (linkData as any)?.action_link ||
+      linkData?.properties?.action_link;
 
-    const cookieStore = await cookies();
-    const supabaseWithCookies = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach((cookie) => {
-              pendingCookies.push(cookie);
-            });
-          },
-        },
-      }
-    );
-
-    // Sign out any existing session first (e.g. anonymous or other user)
-    await supabaseWithCookies.auth.signOut();
-
-    const { error: verifyError } = await supabaseWithCookies.auth.verifyOtp({
-      email,
-      token: linkData.properties.hashed_token,
-      type: "magiclink",
-    });
-
-    if (verifyError) {
-      console.error("OTP verify failed:", verifyError);
-      return NextResponse.redirect(
-        `${origin}/ru/login?error=yandex_verify`
-      );
+    if (!actionLink) {
+      console.error("No action_link in generateLink response");
+      return NextResponse.redirect(`${origin}/ru/login?error=yandex_link`);
     }
 
-    // Step 6: Redirect to dashboard with session cookies
-    const response = NextResponse.redirect(`${origin}/ru/dashboard`);
-
-    // Explicitly set all cookies on the response
-    for (const { name, value, options } of pendingCookies) {
-      response.cookies.set(name, value, options as Record<string, string>);
-    }
-
-    return response;
+    // Step 5: Redirect to Supabase verify endpoint
+    // Supabase will verify the token and redirect to /auth/yandex-session#access_token=...
+    // The client page will pick up the tokens from the hash and set the session
+    return NextResponse.redirect(actionLink);
   } catch (err) {
     console.error("Yandex OAuth error:", err);
-    return NextResponse.redirect(
-      `${origin}/ru/login?error=yandex_unknown`
-    );
+    return NextResponse.redirect(`${origin}/ru/login?error=yandex_unknown`);
   }
 }
