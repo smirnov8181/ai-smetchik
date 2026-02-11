@@ -35,6 +35,25 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    // Root page with OAuth error params — redirect to login with error
+    if (request.nextUrl.pathname === "/") {
+      const error = request.nextUrl.searchParams.get("error");
+      if (error) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/ru/login";
+        url.search = request.nextUrl.search;
+        return NextResponse.redirect(url);
+      }
+
+      // If user is logged in and visits root, redirect to dashboard
+      if (user && !user.is_anonymous) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/ru/dashboard";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+
     // RU dashboard: allow anonymous users through (client will handle anon sign-in)
     // No redirect to login — anyone can access dashboard
 
@@ -87,6 +106,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/ru/dashboard/:path*",
     "/ru/login",
     "/ru/register",
