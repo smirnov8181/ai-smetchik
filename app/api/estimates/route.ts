@@ -11,6 +11,7 @@ import { extractWorkItems } from "@/lib/ai/extractor";
 import { calculatePrices } from "@/lib/ai/calculator";
 import { generateEstimate } from "@/lib/ai/generator";
 import { parsePdfBuffer } from "@/lib/utils/pdf-parser";
+import { checkAnonLimit } from "@/lib/utils/anon-limit";
 
 interface UploadedFile {
   path: string;
@@ -58,6 +59,20 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check anonymous user limit (3 free total)
+  const anonCheck = await checkAnonLimit(supabase, user.id, !!user.is_anonymous);
+  if (anonCheck && !anonCheck.allowed) {
+    return NextResponse.json(
+      {
+        error: "anon_limit",
+        message: "Вы использовали 3 бесплатных проверки. Зарегистрируйтесь чтобы продолжить.",
+        used: anonCheck.used,
+        limit: anonCheck.limit,
+      },
+      { status: 403 }
+    );
   }
 
   // Check subscription limits

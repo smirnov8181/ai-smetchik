@@ -72,7 +72,7 @@ export function LandingContent() {
             </div>
             <div className="flex items-center gap-3">
               {!loading && (
-                user ? (
+                user && !user.is_anonymous ? (
                   <Link href="/ru/dashboard">
                     <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
                       В личный кабинет
@@ -85,7 +85,7 @@ export function LandingContent() {
                         Войти
                       </button>
                     </Link>
-                    <Link href="/ru/register">
+                    <Link href="/ru/dashboard">
                       <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
                         Начать бесплатно
                       </button>
@@ -127,7 +127,7 @@ export function LandingContent() {
 
               <FadeIn delay={0.5} direction="up">
                 <div className="flex flex-wrap gap-4 mb-8">
-                  <Link href="/ru/register">
+                  <Link href="/ru/dashboard">
                     <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
                       Попробовать бесплатно
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -265,7 +265,7 @@ export function LandingContent() {
           </StaggerContainer>
 
           <FadeIn direction="up" delay={0.3} className="text-center mt-12">
-            <Link href="/ru/register">
+            <Link href="/ru/dashboard">
               <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5" />
                 Проверить смету бесплатно
@@ -377,7 +377,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/ru/register">
+                <Link href="/ru/dashboard">
                   <button className="cursor-pointer w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
                     Попробовать бесплатно
                   </button>
@@ -404,7 +404,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/ru/register">
+                <Link href="/ru/dashboard">
                   <button className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
                     Проверить смету
                   </button>
@@ -430,7 +430,7 @@ export function LandingContent() {
             </p>
           </FadeIn>
           <FadeIn direction="up" delay={0.3}>
-            <Link href="/ru/register">
+            <Link href="/ru/dashboard">
               <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
                 Начать бесплатно
                 <ArrowUpRight className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

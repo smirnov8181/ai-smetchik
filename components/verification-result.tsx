@@ -40,6 +40,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { ScaleIn } from "@/components/ui/animations";
+import { AuthGateModal } from "@/components/auth-gate-modal";
 
 interface VerificationResultProps {
   result: VerificationResultType;
@@ -47,6 +48,7 @@ interface VerificationResultProps {
   isPaid: boolean;
   isPublic?: boolean;
   shareToken?: string | null;
+  isAnonymous?: boolean;
 }
 
 function formatPrice(amount: number): string {
@@ -105,6 +107,7 @@ export function VerificationResult({
   isPaid,
   isPublic = false,
   shareToken: initialShareToken,
+  isAnonymous = false,
 }: VerificationResultProps) {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -114,11 +117,19 @@ export function VerificationResult({
   const [isSharing, setIsSharing] = useState(false);
   const [messageCopied, setMessageCopied] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [anonConverted, setAnonConverted] = useState(false);
 
   const verdict = verdictConfig[result.verdict];
   const VerdictIcon = verdict.icon;
 
   const handlePay = async () => {
+    // If anonymous and not yet converted — show auth modal first
+    if (isAnonymous && !anonConverted) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setIsPaymentLoading(true);
     try {
       const res = await fetch(`/api/verify/${verificationId}/pay`, {
@@ -804,6 +815,18 @@ export function VerificationResult({
           </Button>
         </div>
       )}
+
+      {/* Auth gate modal for anonymous users */}
+      <AuthGateModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onSuccess={() => {
+          setAnonConverted(true);
+          setShowAuthModal(false);
+          // Proceed to payment after conversion
+          handlePay();
+        }}
+      />
     </div>
   );
 }

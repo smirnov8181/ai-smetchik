@@ -15,6 +15,7 @@ import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
 import { FileSpreadsheet, FileDown, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
 import { FadeIn, AnimatedBar, ScaleIn } from "@/components/ui/animations";
+import { AuthGateModal } from "@/components/auth-gate-modal";
 
 interface EstimateResultProps {
   result: EstimateResultType & {
@@ -25,6 +26,7 @@ interface EstimateResultProps {
   isPaid?: boolean;
   shareToken?: string | null;
   isPublic?: boolean; // true when viewing via share link
+  isAnonymous?: boolean;
 }
 
 function formatPrice(amount: number): string {
@@ -235,7 +237,7 @@ function generateHumanSummary(sections: EstimateResultType["sections"]): string 
   return `В смету входят: ${worksList}. Всего ${totalItems} позиций с учётом материалов.`;
 }
 
-export function EstimateResult({ result, estimateId, isPaid = false, shareToken: initialShareToken, isPublic = false }: EstimateResultProps) {
+export function EstimateResult({ result, estimateId, isPaid = false, shareToken: initialShareToken, isPublic = false, isAnonymous = false }: EstimateResultProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
@@ -244,12 +246,20 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
   const [copied, setCopied] = useState(false);
   const [qualityTier, setQualityTier] = useState<QualityTier>("standard");
   const [activeScenarios, setActiveScenarios] = useState<Set<string>>(new Set());
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [anonConverted, setAnonConverted] = useState(false);
 
   const hiddenSections = result._hiddenSections || 0;
   const hiddenItems = result._hiddenItems || 0;
   const hasPaywall = !isPaid && hiddenSections > 0;
 
   const handlePay = async () => {
+    // If anonymous and not yet converted — show auth modal first
+    if (isAnonymous && !anonConverted) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setIsPaymentLoading(true);
     try {
       const res = await fetch(`/api/estimates/${estimateId}/pay`, {
@@ -1086,6 +1096,18 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
           </CardContent>
         </Card>
       )}
+
+      {/* Auth gate modal for anonymous users */}
+      <AuthGateModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onSuccess={() => {
+          setAnonConverted(true);
+          setShowAuthModal(false);
+          // Proceed to payment after conversion
+          handlePay();
+        }}
+      />
     </div>
   );
 }

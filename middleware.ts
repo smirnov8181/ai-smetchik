@@ -35,23 +35,23 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Handle US dashboard auth
+    // RU dashboard: allow anonymous users through (client will handle anon sign-in)
+    // No redirect to login — anyone can access dashboard
+
+    // US dashboard: still requires real auth (no anon support yet)
     if (!user && request.nextUrl.pathname.startsWith("/us/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/us/login";
       return NextResponse.redirect(url);
     }
 
-    // Handle RU dashboard auth
-    if (!user && request.nextUrl.pathname.startsWith("/ru/dashboard")) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/ru/login";
-      return NextResponse.redirect(url);
-    }
+    // Redirect REGISTERED (non-anonymous) users from login/register to dashboard
+    // Anonymous users CAN access login/register to convert their account
+    const isAnonymous = user?.is_anonymous ?? false;
 
-    // Redirect logged-in users from RU login/register to dashboard
     if (
       user &&
+      !isAnonymous &&
       (request.nextUrl.pathname === "/ru/login" ||
         request.nextUrl.pathname === "/ru/register")
     ) {
@@ -71,17 +71,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   } catch {
-    // If Supabase auth fails on dashboard routes, redirect to login
+    // If Supabase auth fails on US dashboard routes, redirect to login
     if (request.nextUrl.pathname.startsWith("/us/dashboard")) {
       const url = request.nextUrl.clone();
       url.pathname = "/us/login";
       return NextResponse.redirect(url);
     }
-    if (request.nextUrl.pathname.startsWith("/ru/dashboard")) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/ru/login";
-      return NextResponse.redirect(url);
-    }
+    // RU dashboard: allow through even on error (client will handle anon sign-in)
     // For login/register pages, allow through even on error
     return NextResponse.next();
   }

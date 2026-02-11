@@ -19,6 +19,7 @@ import type {
   Verification,
   VerificationResult as VerificationResultType,
 } from "@/lib/supabase/types";
+import { useAnonAuth } from "@/hooks/use-anon-auth";
 
 const POLLING_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
@@ -27,6 +28,7 @@ export default function VerificationDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
   const justPaid = searchParams.get("paid") === "true";
+  const { isAnonymous } = useAnonAuth();
 
   const [verification, setVerification] = useState<Verification | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -210,6 +212,7 @@ export default function VerificationDetailPage() {
           verificationId={verification.id}
           isPaid={verification.is_paid || justPaid || isAdmin}
           shareToken={verification.share_token}
+          isAnonymous={isAnonymous}
         />
       )}
 

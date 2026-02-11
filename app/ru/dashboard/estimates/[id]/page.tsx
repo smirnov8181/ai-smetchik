@@ -20,6 +20,7 @@ import type {
   Estimate,
   EstimateResult as EstimateResultType,
 } from "@/lib/supabase/types";
+import { useAnonAuth } from "@/hooks/use-anon-auth";
 
 const POLLING_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
@@ -28,6 +29,7 @@ export default function EstimateDetailPage() {
   const searchParams = useSearchParams();
   const id = params.id as string;
   const justPaid = searchParams.get("paid") === "true";
+  const { isAnonymous } = useAnonAuth();
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -212,6 +214,7 @@ export default function EstimateDetailPage() {
           estimateId={estimate.id}
           isPaid={estimate.is_paid || justPaid || isAdmin}
           shareToken={estimate.share_token}
+          isAnonymous={isAnonymous}
         />
       )}
 

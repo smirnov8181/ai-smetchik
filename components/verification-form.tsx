@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FileUpload } from "@/components/file-upload";
+import { AnonLimitReached } from "@/components/anon-limit-reached";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -22,6 +23,7 @@ export function VerificationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [anonLimit, setAnonLimit] = useState<{ used: number; limit: number } | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +86,21 @@ export function VerificationForm() {
 
       if (!response.ok) {
         const errText = await response.text();
-        throw new Error(errText || "Ошибка сервера");
+        try {
+          const errJson = JSON.parse(errText);
+          if (errJson.error === "anon_limit") {
+            setAnonLimit({ used: errJson.used, limit: errJson.limit });
+            setIsSubmitting(false);
+            setUploadProgress("");
+            return;
+          }
+          throw new Error(errJson.message || errJson.error || "Ошибка сервера");
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) {
+            throw new Error(errText || "Ошибка сервера");
+          }
+          throw parseErr;
+        }
       }
 
       // Read the first SSE chunk to get the verification ID
@@ -137,6 +153,10 @@ export function VerificationForm() {
       setUploadProgress("");
     }
   };
+
+  if (anonLimit) {
+    return <AnonLimitReached used={anonLimit.used} limit={anonLimit.limit} />;
+  }
 
   return (
     <Card>
