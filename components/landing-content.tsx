@@ -202,7 +202,7 @@ export function LandingContent() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 bg-[#161616] text-[#161616]">
+      <section className="py-16 bg-[#161616] text-white">
         <div className="max-w-7xl mx-auto px-6">
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8" staggerDelay={0.15}>
             {stats.map((stat, i) => (
@@ -211,7 +211,7 @@ export function LandingContent() {
                   <div className="text-4xl md:text-5xl font-bold mb-2">
                     <CountUp value={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div className="text-[#161616]/50 text-sm">{stat.label}</div>
+                  <div className="text-white/50 text-sm">{stat.label}</div>
                 </div>
               </StaggerItem>
             ))}
@@ -290,7 +290,7 @@ export function LandingContent() {
               <StaggerItem key={i}>
                 <div className="group relative p-8 rounded-3xl bg-[#FAF4EC] hover:-translate-y-2 transition-transform duration-300">
                   <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                    <step.icon className="w-8 h-8 text-[#161616]" />
+                    <step.icon className="w-8 h-8 text-white" />
                   </div>
                   <div className="text-7xl font-bold text-[#161616]/5 absolute top-4 right-6">{step.num}</div>
                   <h3 className="text-2xl font-bold mb-2">{step.title}</h3>
@@ -416,7 +416,7 @@ export function LandingContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-[#161616] text-[#161616]">
+      <section className="py-24 bg-[#161616] text-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <FadeIn direction="up">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
@@ -425,7 +425,7 @@ export function LandingContent() {
             </h2>
           </FadeIn>
           <FadeIn direction="up" delay={0.15}>
-            <p className="text-xl text-[#161616]/50 mb-10 max-w-2xl mx-auto">
+            <p className="text-xl text-white/50 mb-10 max-w-2xl mx-auto">
               Создайте смету или проверьте смету подрядчика — бесплатно и за 30 секунд.
             </p>
           </FadeIn>
