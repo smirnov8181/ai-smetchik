@@ -5,11 +5,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Client wrapper that ensures a user session exists before rendering children.
- * If no session — signs in anonymously.
+ * If no session — signs in anonymously (with retries).
  * Shows loading skeleton while initializing.
  */
 export function DashboardAuthGate({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAnonAuth();
+  const { user, loading, error } = useAnonAuth();
 
   if (loading) {
     return (
@@ -26,12 +26,15 @@ export function DashboardAuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // This shouldn't happen — useAnonAuth always creates a session
-    // But just in case, show a retry message
     return (
       <div className="max-w-7xl mx-auto px-6 pt-8 pb-20 w-full">
         <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
-          <p className="text-[#161616]/50 mb-4">Не удалось создать сессию</p>
+          <p className="text-[#161616]/50 mb-2">
+            {error || "Не удалось создать сессию"}
+          </p>
+          <p className="text-[#161616]/30 text-sm mb-4">
+            Попробуйте обновить страницу или очистить cookies
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all"

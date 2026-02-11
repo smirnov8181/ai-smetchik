@@ -85,7 +85,7 @@ export function LandingContent() {
                         Войти
                       </button>
                     </Link>
-                    <Link href="/ru/dashboard">
+                    <Link href="/ru/dashboard/estimates/new">
                       <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-xl hover:opacity-90 transition-all flex items-center gap-1">
                         <span>Начать бесплатно</span>
                         <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
@@ -130,7 +130,7 @@ export function LandingContent() {
 
               <FadeIn delay={0.5} direction="up">
                 <div className="flex flex-wrap gap-4 mb-8">
-                  <Link href="/ru/dashboard">
+                  <Link href="/ru/dashboard/estimates/new">
                     <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all flex items-center gap-2">
                       <span>Попробовать бесплатно</span>
                       <div className="ml-1 -rotate-45 transition-all duration-200 group-hover:rotate-0">
@@ -270,7 +270,7 @@ export function LandingContent() {
           </StaggerContainer>
 
           <FadeIn direction="up" delay={0.3} className="text-center mt-12">
-            <Link href="/ru/dashboard">
+            <Link href="/ru/dashboard/verify/new">
               <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5" />
                 <span>Проверить смету бесплатно</span>
@@ -384,7 +384,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/ru/dashboard">
+                <Link href="/ru/dashboard/estimates/new">
                   <button className="cursor-pointer group w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
                     <span>Попробовать бесплатно</span>
                     <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
@@ -414,7 +414,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/ru/dashboard">
+                <Link href="/ru/dashboard/verify/new">
                   <button className="cursor-pointer group w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
                     <span>Проверить смету</span>
                     <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
@@ -443,7 +443,7 @@ export function LandingContent() {
             </p>
           </FadeIn>
           <FadeIn direction="up" delay={0.3}>
-            <Link href="/ru/dashboard">
+            <Link href="/ru/dashboard/estimates/new">
               <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-xl text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
                 <span>Начать бесплатно</span>
                 <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
