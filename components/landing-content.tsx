@@ -73,8 +73,9 @@ export function LandingContent() {
               {!loading && (
                 user && !user.is_anonymous ? (
                   <Link href="/ru/dashboard">
-                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity">
-                      В личный кабинет
+                    <button className="cursor-pointer group relative inline-flex items-center justify-center overflow-hidden bg-[#161616] text-white font-medium px-5 py-2.5 text-sm rounded-xl transition-all">
+                      <span className="absolute h-0 w-0 rounded-full bg-[#0D8DFF] transition-all duration-300 group-hover:h-56 group-hover:w-48"></span>
+                      <span className="relative">В личный кабинет</span>
                     </button>
                   </Link>
                 ) : (
