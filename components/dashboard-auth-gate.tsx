@@ -26,24 +26,9 @@ export function DashboardAuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 pt-8 pb-20 w-full">
-        <div className="bg-white rounded-3xl p-12 border border-[#161616]/5 text-center">
-          <p className="text-[#161616]/50 mb-2">
-            {error || "Не удалось создать сессию"}
-          </p>
-          <p className="text-[#161616]/30 text-sm mb-4">
-            Попробуйте обновить страницу или очистить cookies
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all"
-          >
-            Попробовать снова
-          </button>
-        </div>
-      </div>
-    );
+    // If anon sign-in failed, still show children (forms will handle auth on submit)
+    // This is a graceful fallback so users can at least see the UI
+    return <>{children}</>;
   }
 
   return <>{children}</>;

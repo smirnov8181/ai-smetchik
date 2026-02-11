@@ -40,8 +40,8 @@ import {
   ChevronRight,
   ArrowRight,
 } from "lucide-react";
-import { ScaleIn } from "@/components/ui/animations";
 import { AuthGateModal } from "@/components/auth-gate-modal";
+import { useCountUp } from "@/hooks/use-count-up";
 
 interface VerificationResultProps {
   result: VerificationResultType;
@@ -123,6 +123,12 @@ export function VerificationResult({
 
   const verdict = verdictConfig[result.verdict];
   const VerdictIcon = verdict.icon;
+
+  // Animated count-up for summary numbers
+  const animContractor = useCountUp(result.total_contractor, 1200, 100);
+  const animMarket = useCountUp(result.total_market_avg, 1200, 200);
+  const animOverpay = useCountUp(result.total_overpay, 1200, 300);
+  const animPercent = useCountUp(result.overpay_percent, 800, 400);
 
   const handlePay = async () => {
     // If anonymous and not yet converted — show auth modal first
@@ -500,7 +506,6 @@ export function VerificationResult({
   return (
     <div className="space-y-6">
       {/* Verdict Card */}
-      <ScaleIn>
         <Card className={`border ${verdict.bg}`}>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -518,8 +523,8 @@ export function VerificationResult({
                   {result.verdict === "fair" ? "OK" : result.verdict === "slightly_overpriced" ? "Есть переплата" : "Переплата"}
                 </Badge>
               ) : (
-                <Badge variant={verdict.badge} className="text-lg px-4 py-1">
-                  {result.overpay_percent > 0 ? `+${result.overpay_percent}%` : "OK"}
+                <Badge variant={verdict.badge} className="text-lg px-4 py-1 tabular-nums">
+                  {result.overpay_percent > 0 ? `+${animPercent}%` : "OK"}
                 </Badge>
               )}
             </div>
@@ -557,27 +562,27 @@ export function VerificationResult({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Смета подрядчика</p>
-                    <p className="text-lg font-semibold">
-                      {formatPrice(result.total_contractor)} руб.
+                    <p className="text-lg font-semibold tabular-nums">
+                      {formatPrice(animContractor)} руб.
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Рыночная цена</p>
-                    <p className="text-lg font-semibold">
-                      {formatPrice(result.total_market_avg)} руб.
+                    <p className="text-lg font-semibold tabular-nums">
+                      {formatPrice(animMarket)} руб.
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Переплата</p>
-                    <p className="text-lg font-bold text-red-600">
+                    <p className="text-lg font-bold text-red-600 tabular-nums">
                       {result.total_overpay > 0
-                        ? `${formatPrice(result.total_overpay)} руб.`
+                        ? `${formatPrice(animOverpay)} руб.`
                         : "Нет"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Завышенных позиций</p>
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold tabular-nums">
                       {overpayItems.length} из {items.length}
                     </p>
                   </div>
@@ -587,7 +592,6 @@ export function VerificationResult({
             )}
           </CardContent>
         </Card>
-      </ScaleIn>
 
       {/* === GROUPED ITEMS TABLE === */}
       <Card>

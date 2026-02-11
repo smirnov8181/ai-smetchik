@@ -22,7 +22,20 @@ export function useAnonAuth() {
     let cancelled = false;
 
     const init = async () => {
-      // Check existing session
+      // Check existing session first via getSession (faster, uses cache)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        if (!cancelled) {
+          setUser(session.user);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Double-check with getUser (validates token with server)
       const {
         data: { user: existingUser },
       } = await supabase.auth.getUser();
@@ -39,21 +52,30 @@ export function useAnonAuth() {
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         if (cancelled) return;
 
-        const { data, error: signInError } = await supabase.auth.signInAnonymously();
+        try {
+          const { data, error: signInError } = await supabase.auth.signInAnonymously();
 
-        if (!signInError && data.user) {
-          if (!cancelled) {
-            setUser(data.user);
-            setError(null);
-            setLoading(false);
+          if (!signInError && data.user) {
+            if (!cancelled) {
+              setUser(data.user);
+              setError(null);
+              setLoading(false);
+            }
+            return;
           }
-          return;
-        }
 
-        console.error(
-          `Anonymous sign-in attempt ${attempt}/${MAX_RETRIES} failed:`,
-          signInError?.message
-        );
+          console.error(
+            `Anonymous sign-in attempt ${attempt}/${MAX_RETRIES} failed:`,
+            signInError?.message,
+            signInError?.status,
+            JSON.stringify(signInError)
+          );
+        } catch (e) {
+          console.error(
+            `Anonymous sign-in attempt ${attempt}/${MAX_RETRIES} threw:`,
+            e
+          );
+        }
 
         // Wait before retry (except on last attempt)
         if (attempt < MAX_RETRIES) {
