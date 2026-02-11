@@ -25,6 +25,7 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const initedRef = useRef(false);
   const containerId = useRef(
     `ya-auth-${Math.random().toString(36).slice(2, 8)}`
   ).current;
@@ -33,6 +34,9 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
 
   useEffect(() => {
     if (!clientId) return;
+    // Prevent double init (React StrictMode calls useEffect twice)
+    if (initedRef.current) return;
+    initedRef.current = true;
 
     const origin = window.location.origin;
 
@@ -95,6 +99,8 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
         })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((err: any) => {
+          // "in_progress" is not a real error — SDK was already initialized
+          if (err?.code === "in_progress") return;
           console.error("YaAuthSuggest error:", err);
           setError(true);
         });
