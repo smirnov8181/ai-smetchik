@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 /**
  * Yandex OAuth callback handler.
@@ -10,10 +12,7 @@ import { createServiceClient } from "@/lib/supabase/server";
  * 3. We exchange code → access_token via Yandex API
  * 4. Fetch user info (email, name) from Yandex
  * 5. Create or find Supabase user via admin API
- * 6. Set session cookie and redirect to dashboard
- *
- * Supabase does NOT have a built-in Yandex provider,
- * so we handle the full OAuth flow manually.
+ * 6. Verify OTP to set session cookies, redirect to dashboard
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -84,24 +83,18 @@ export async function GET(request: Request) {
       );
     }
 
-    // Step 3: Create or sign in user via Supabase Admin API
-    const supabase = createServiceClient();
+    // Step 3: Create or find user via Supabase Admin API
+    const supabaseAdmin = createServiceClient();
 
-    // Check if user already exists
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(
       (u) => u.email === email
     );
 
-    let userId: string;
-
-    if (existingUser) {
-      userId = existingUser.id;
-    } else {
-      // Create new user with a random password (they'll use OAuth to log in)
+    if (!existingUser) {
       const randomPassword = crypto.randomUUID() + crypto.randomUUID();
-      const { data: newUser, error: createError } =
-        await supabase.auth.admin.createUser({
+      const { error: createError } =
+        await supabaseAdmin.auth.admin.createUser({
           email,
           password: randomPassword,
           email_confirm: true,
@@ -111,25 +104,19 @@ export async function GET(request: Request) {
           },
         });
 
-      if (createError || !newUser?.user) {
+      if (createError) {
         console.error("Supabase create user failed:", createError);
         return NextResponse.redirect(
           `${origin}/ru/login?error=yandex_create`
         );
       }
-
-      userId = newUser.user.id;
     }
 
-    // Step 4: Generate a magic link to establish a session
-    // We use admin.generateLink to create a one-time login link
+    // Step 4: Generate magic link OTP
     const { data: linkData, error: linkError } =
-      await supabase.auth.admin.generateLink({
+      await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: {
-          redirectTo: `${origin}/ru/dashboard`,
-        },
       });
 
     if (linkError || !linkData?.properties?.hashed_token) {
@@ -139,19 +126,40 @@ export async function GET(request: Request) {
       );
     }
 
-    // The hashed_token can be used to verify the OTP and create a session
-    // We redirect to the Supabase verify endpoint which sets the session cookies
-    const verifyUrl = new URL(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/verify`
-    );
-    verifyUrl.searchParams.set("token", linkData.properties.hashed_token);
-    verifyUrl.searchParams.set("type", "magiclink");
-    verifyUrl.searchParams.set(
-      "redirect_to",
-      `${origin}/auth/callback?next=/ru/dashboard`
+    // Step 5: Verify OTP server-side to set session cookies
+    const cookieStore = await cookies();
+    const supabaseWithCookies = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          },
+        },
+      }
     );
 
-    return NextResponse.redirect(verifyUrl.toString());
+    const { error: verifyError } = await supabaseWithCookies.auth.verifyOtp({
+      email,
+      token: linkData.properties.hashed_token,
+      type: "magiclink",
+    });
+
+    if (verifyError) {
+      console.error("OTP verify failed:", verifyError);
+      return NextResponse.redirect(
+        `${origin}/ru/login?error=yandex_verify`
+      );
+    }
+
+    // Step 6: Redirect to dashboard
+    return NextResponse.redirect(`${origin}/ru/dashboard`);
   } catch (err) {
     console.error("Yandex OAuth error:", err);
     return NextResponse.redirect(
