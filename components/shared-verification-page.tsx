@@ -137,7 +137,7 @@ export function SharedVerificationContent({ token }: { token: string }) {
               Хотите проверить свою смету на завышенные цены?
             </p>
             <Link href="/ru/register">
-              <Button className="bg-[#33C791] text-white hover:bg-[#33C791]/90">
+              <Button className="bg-[#33C791] text-[#161616] hover:bg-[#33C791]/90">
                 Проверить бесплатно
               </Button>
             </Link>

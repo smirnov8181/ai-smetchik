@@ -74,7 +74,7 @@ export function LandingContent() {
               {!loading && (
                 user ? (
                   <Link href="/ru/dashboard">
-                    <button className="cursor-pointer bg-[#0D8DFF] text-white font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
+                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
                       В личный кабинет
                     </button>
                   </Link>
@@ -86,7 +86,7 @@ export function LandingContent() {
                       </button>
                     </Link>
                     <Link href="/ru/register">
-                      <button className="cursor-pointer bg-[#33C791] text-white font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
+                      <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
                         Начать бесплатно
                       </button>
                     </Link>
@@ -128,7 +128,7 @@ export function LandingContent() {
               <FadeIn delay={0.5} direction="up">
                 <div className="flex flex-wrap gap-4 mb-8">
                   <Link href="/ru/register">
-                    <button className="cursor-pointer group bg-[#0D8DFF] text-white font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
+                    <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
                       Попробовать бесплатно
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
@@ -202,7 +202,7 @@ export function LandingContent() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 bg-[#161616] text-white">
+      <section className="py-16 bg-[#161616] text-[#161616]">
         <div className="max-w-7xl mx-auto px-6">
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8" staggerDelay={0.15}>
             {stats.map((stat, i) => (
@@ -211,7 +211,7 @@ export function LandingContent() {
                   <div className="text-4xl md:text-5xl font-bold mb-2">
                     <CountUp value={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div className="text-white/50 text-sm">{stat.label}</div>
+                  <div className="text-[#161616]/50 text-sm">{stat.label}</div>
                 </div>
               </StaggerItem>
             ))}
@@ -266,7 +266,7 @@ export function LandingContent() {
 
           <FadeIn direction="up" delay={0.3} className="text-center mt-12">
             <Link href="/ru/register">
-              <button className="cursor-pointer group bg-[#33C791] text-white font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
+              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5" />
                 Проверить смету бесплатно
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -290,7 +290,7 @@ export function LandingContent() {
               <StaggerItem key={i}>
                 <div className="group relative p-8 rounded-3xl bg-[#FAF4EC] hover:-translate-y-2 transition-transform duration-300">
                   <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                    <step.icon className="w-8 h-8 text-white" />
+                    <step.icon className="w-8 h-8 text-[#161616]" />
                   </div>
                   <div className="text-7xl font-bold text-[#161616]/5 absolute top-4 right-6">{step.num}</div>
                   <h3 className="text-2xl font-bold mb-2">{step.title}</h3>
@@ -361,7 +361,7 @@ export function LandingContent() {
             {/* Create Estimate */}
             <StaggerItem>
               <div className="p-8 rounded-3xl bg-[#FAF4EC] border-2 border-[#33C791] shadow-lg shadow-[#33C791]/10 hover:-translate-y-2 transition-all duration-300 relative h-full">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#33C791] text-white font-semibold text-sm px-4 py-1 rounded-full">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#33C791] text-[#161616] font-semibold text-sm px-4 py-1 rounded-full">
                   Превью бесплатно
                 </div>
                 <div className="w-14 h-14 bg-[#33C791]/20 rounded-2xl flex items-center justify-center mb-6">
@@ -378,7 +378,7 @@ export function LandingContent() {
                   ))}
                 </ul>
                 <Link href="/ru/register">
-                  <button className="cursor-pointer w-full bg-[#33C791] text-white font-semibold py-4 rounded-full hover:opacity-90 transition-all">
+                  <button className="cursor-pointer w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
                     Попробовать бесплатно
                   </button>
                 </Link>
@@ -388,7 +388,7 @@ export function LandingContent() {
             {/* Verify Estimate - Paid report */}
             <StaggerItem>
               <div className="p-8 rounded-3xl bg-[#FAF4EC] border-2 border-[#0D8DFF] shadow-lg shadow-[#0D8DFF]/10 hover:-translate-y-2 transition-all duration-300 relative h-full">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0D8DFF] text-white font-semibold text-sm px-4 py-1 rounded-full">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0D8DFF] text-[#161616] font-semibold text-sm px-4 py-1 rounded-full">
                   Разовый платёж
                 </div>
                 <div className="w-14 h-14 bg-[#0D8DFF]/20 rounded-2xl flex items-center justify-center mb-6">
@@ -405,7 +405,7 @@ export function LandingContent() {
                   ))}
                 </ul>
                 <Link href="/ru/register">
-                  <button className="cursor-pointer w-full bg-[#0D8DFF] text-white font-semibold py-4 rounded-full hover:opacity-90 transition-all">
+                  <button className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
                     Проверить смету
                   </button>
                 </Link>
@@ -416,7 +416,7 @@ export function LandingContent() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 bg-[#161616] text-white">
+      <section className="py-24 bg-[#161616] text-[#161616]">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <FadeIn direction="up">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
@@ -425,13 +425,13 @@ export function LandingContent() {
             </h2>
           </FadeIn>
           <FadeIn direction="up" delay={0.15}>
-            <p className="text-xl text-white/50 mb-10 max-w-2xl mx-auto">
+            <p className="text-xl text-[#161616]/50 mb-10 max-w-2xl mx-auto">
               Создайте смету или проверьте смету подрядчика — бесплатно и за 30 секунд.
             </p>
           </FadeIn>
           <FadeIn direction="up" delay={0.3}>
             <Link href="/ru/register">
-              <button className="cursor-pointer group bg-[#33C791] text-white font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
+              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
                 Начать бесплатно
                 <ArrowUpRight className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </button>
