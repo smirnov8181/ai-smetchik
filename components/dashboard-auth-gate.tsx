@@ -34,7 +34,7 @@ export function DashboardAuthGate({ children }: { children: React.ReactNode }) {
           <p className="text-[#161616]/50 mb-4">Не удалось создать сессию</p>
           <button
             onClick={() => window.location.reload()}
-            className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all"
+            className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all"
           >
             Попробовать снова
           </button>

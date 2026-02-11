@@ -14,7 +14,6 @@ import {
   Camera,
   FileCheck,
   BadgeCheck,
-  ArrowUpRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -93,8 +92,11 @@ export function USLanding() {
               {!loading && (
                 user ? (
                   <Link href="/us/dashboard">
-                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
-                      Dashboard
+                    <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2">
+                      <span>Dashboard</span>
+                      <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
                     </button>
                   </Link>
                 ) : (
@@ -105,8 +107,11 @@ export function USLanding() {
                       </button>
                     </Link>
                     <Link href="/us/register">
-                      <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
-                        Get Results
+                      <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-xl hover:opacity-90 transition-opacity flex items-center gap-2">
+                        <span>Get Results</span>
+                        <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                          <ArrowRight className="w-5 h-5" />
+                        </div>
                       </button>
                     </Link>
                   </>
@@ -142,14 +147,19 @@ export function USLanding() {
 
               <div className="flex flex-wrap gap-4 mb-8">
                 <Link href="/us/register">
-                  <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
-                    Check My Estimate — $39.99
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all flex items-center gap-2">
+                    <span>Check My Estimate — $39.99</span>
+                    <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
                   </button>
                 </Link>
                 <Link href="/us/register">
-                  <button className="cursor-pointer bg-[#FA5424] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all">
-                    See Demo
+                  <button className="cursor-pointer group bg-[#FA5424] text-[#161616] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all flex items-center gap-2">
+                    <span>See Demo</span>
+                    <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
                   </button>
                 </Link>
               </div>
@@ -358,9 +368,11 @@ export function USLanding() {
             </div>
 
             <Link href="/us/register">
-              <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
-                Check My Estimate
-                <ArrowUpRight className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-bold px-10 py-5 rounded-xl text-xl hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
+                <span>Check My Estimate</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
               </button>
             </Link>
 
@@ -382,9 +394,11 @@ export function USLanding() {
             Your contractor is asking for thousands. Isn't it worth $39.99 to be sure?
           </p>
           <Link href="/us/register">
-            <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
-              Get Started Now
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-xl text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
+              <span>Get Started Now</span>
+              <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                <ArrowRight className="w-5 h-5" />
+              </div>
             </button>
           </Link>
         </div>

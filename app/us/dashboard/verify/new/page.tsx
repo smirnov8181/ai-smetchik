@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, Loader2, Upload, FileText, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShieldCheck, Loader2, Upload, FileText, X } from "lucide-react";
 
 export default function USNewVerificationPage() {
   const [text, setText] = useState("");
@@ -212,7 +212,7 @@ export default function USNewVerificationPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="cursor-pointer w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="cursor-pointer group w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
@@ -222,7 +222,10 @@ export default function USNewVerificationPage() {
             ) : (
               <>
                 <ShieldCheck className="w-5 h-5" />
-                Check This Estimate
+                <span>Check This Estimate</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
               </>
             )}
           </button>

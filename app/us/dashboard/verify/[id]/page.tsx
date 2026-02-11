@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowRight,
   ShieldCheck,
   Loader2,
   AlertCircle,
@@ -92,7 +93,7 @@ export default function USVerificationDetailPage() {
           <h3 className="text-xl font-bold text-[#161616] mb-2">Error</h3>
           <p className="text-[#161616]/50 mb-6">{error}</p>
           <Link href="/us/dashboard">
-            <button className="cursor-pointer inline-flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+            <button className="cursor-pointer inline-flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all">
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </button>
@@ -198,7 +199,7 @@ export default function USVerificationDetailPage() {
                   "Could not process the estimate. Please try uploading in a different format."}
               </p>
               <Link href="/us/dashboard/verify/new">
-                <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+                <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all">
                   Try Again
                 </button>
               </Link>
@@ -397,8 +398,11 @@ export default function USVerificationDetailPage() {
                     See all {result.items?.length || 0} line items with fair market prices
                     and exactly how much you can save on each.
                   </p>
-                  <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                    Unlock for $9.99
+                  <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition-all flex items-center gap-2">
+                    <span>Unlock for $9.99</span>
+                    <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
                   </button>
                   <p className="text-white/40 text-sm mt-4">
                     One-time payment • Instant access • 30-day money-back guarantee

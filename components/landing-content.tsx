@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   AlertTriangle,
   CheckCircle2,
-  ArrowUpRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -74,7 +73,7 @@ export function LandingContent() {
               {!loading && (
                 user && !user.is_anonymous ? (
                   <Link href="/ru/dashboard">
-                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-opacity">
+                    <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity">
                       В личный кабинет
                     </button>
                   </Link>
@@ -86,8 +85,11 @@ export function LandingContent() {
                       </button>
                     </Link>
                     <Link href="/ru/dashboard">
-                      <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-full hover:opacity-90 transition-opacity">
-                        Начать бесплатно
+                      <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-xl hover:opacity-90 transition-all flex items-center gap-1">
+                        <span>Начать бесплатно</span>
+                        <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </div>
                       </button>
                     </Link>
                   </>
@@ -128,9 +130,11 @@ export function LandingContent() {
               <FadeIn delay={0.5} direction="up">
                 <div className="flex flex-wrap gap-4 mb-8">
                   <Link href="/ru/dashboard">
-                    <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all flex items-center gap-2">
-                      Попробовать бесплатно
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all flex items-center gap-2">
+                      <span>Попробовать бесплатно</span>
+                      <div className="ml-1 -rotate-45 transition-all duration-200 group-hover:rotate-0">
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
                     </button>
                   </Link>
                 </div>
@@ -266,10 +270,12 @@ export function LandingContent() {
 
           <FadeIn direction="up" delay={0.3} className="text-center mt-12">
             <Link href="/ru/dashboard">
-              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
+              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-xl text-lg hover:opacity-90 transition-all inline-flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5" />
-                Проверить смету бесплатно
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <span>Проверить смету бесплатно</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
               </button>
             </Link>
           </FadeIn>
@@ -378,8 +384,11 @@ export function LandingContent() {
                   ))}
                 </ul>
                 <Link href="/ru/dashboard">
-                  <button className="cursor-pointer w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
-                    Попробовать бесплатно
+                  <button className="cursor-pointer group w-full bg-[#33C791] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                    <span>Попробовать бесплатно</span>
+                    <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
                   </button>
                 </Link>
               </div>
@@ -405,8 +414,11 @@ export function LandingContent() {
                   ))}
                 </ul>
                 <Link href="/ru/dashboard">
-                  <button className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all">
-                    Проверить смету
+                  <button className="cursor-pointer group w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                    <span>Проверить смету</span>
+                    <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                      <ArrowRight className="w-5 h-5" />
+                    </div>
                   </button>
                 </Link>
               </div>
@@ -431,9 +443,11 @@ export function LandingContent() {
           </FadeIn>
           <FadeIn direction="up" delay={0.3}>
             <Link href="/ru/dashboard">
-              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-full text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
-                Начать бесплатно
-                <ArrowUpRight className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-bold px-10 py-5 rounded-xl text-xl hover:opacity-90 transition-all inline-flex items-center gap-2">
+                <span>Начать бесплатно</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-6 h-6" />
+                </div>
               </button>
             </Link>
           </FadeIn>

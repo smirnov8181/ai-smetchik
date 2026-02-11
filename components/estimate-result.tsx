@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EstimateTable } from "@/components/estimate-table";
 import { EstimateResult as EstimateResultType } from "@/lib/supabase/types";
-import { FileSpreadsheet, FileDown, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck } from "lucide-react";
+import { FileSpreadsheet, FileDown, AlertTriangle, Loader2, Info, Share2, Check, CheckCircle, Link, PieChart, Lightbulb, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 import { FadeIn, AnimatedBar, ScaleIn } from "@/components/ui/animations";
 import { AuthGateModal } from "@/components/auth-gate-modal";
 
@@ -611,7 +611,7 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                   </div>
                   <Button
                     size="lg"
-                    className="text-base px-8 shadow-lg"
+                    className="group text-base px-8 shadow-lg"
                     onClick={handlePay}
                     disabled={isPaymentLoading}
                   >
@@ -620,7 +620,12 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                     ) : (
                       <ShieldCheck className="mr-2 h-5 w-5" />
                     )}
-                    Открыть полную смету — 490 руб.
+                    <span>Открыть полную смету — 490 руб.</span>
+                    {!isPaymentLoading && (
+                      <div className="ml-1 -rotate-45 transition-all duration-200 group-hover:rotate-0">
+                        <ArrowRight className="h-5 w-5" />
+                      </div>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -945,7 +950,7 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
             <div className="text-center">
               <Button
                 size="lg"
-                className="text-lg px-10 py-6 rounded-full shadow-lg shadow-primary/20"
+                className="group text-lg px-10 py-6 shadow-lg shadow-primary/20"
                 onClick={handlePay}
                 disabled={isPaymentLoading}
               >
@@ -954,7 +959,12 @@ export function EstimateResult({ result, estimateId, isPaid = false, shareToken:
                 ) : (
                   <ShieldCheck className="mr-2 h-5 w-5" />
                 )}
-                Открыть полную смету — 490 руб.
+                <span>Открыть полную смету — 490 руб.</span>
+                {!isPaymentLoading && (
+                  <div className="ml-1 -rotate-45 transition-all duration-200 group-hover:rotate-0">
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
+                )}
               </Button>
               <p className="text-xs text-muted-foreground mt-3">
                 Разовый платёж • Банковская карта • Моментальный доступ

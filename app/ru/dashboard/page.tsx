@@ -109,17 +109,21 @@ export default async function DashboardPage() {
           <h2 className="text-2xl font-bold text-[#161616]">Мои документы</h2>
           <div className="flex items-center gap-3">
             <Link href="/ru/dashboard/estimates/new">
-              <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+              <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all">
                 <Plus className="w-5 h-5" />
-                Создать смету
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>Создать смету</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-4 h-4" />
+                </div>
               </button>
             </Link>
             <Link href="/ru/dashboard/verify/new">
-              <button className="cursor-pointer group flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+              <button className="cursor-pointer group flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all">
                 <ShieldCheck className="w-5 h-5" />
-                Проверить смету
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>Проверить смету</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-4 h-4" />
+                </div>
               </button>
             </Link>
           </div>
@@ -144,13 +148,19 @@ export default async function DashboardPage() {
             </p>
             <div className="flex items-center justify-center gap-3">
               <Link href="/ru/dashboard/estimates/new">
-                <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                  Создать смету
+                <button className="cursor-pointer group bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition-all flex items-center gap-2">
+                  <span>Создать смету</span>
+                  <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
                 </button>
               </Link>
               <Link href="/ru/dashboard/verify/new">
-                <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                  Проверить смету
+                <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition-all flex items-center gap-2">
+                  <span>Проверить смету</span>
+                  <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
                 </button>
               </Link>
             </div>

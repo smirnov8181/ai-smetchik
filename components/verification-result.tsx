@@ -38,6 +38,7 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
 import { ScaleIn } from "@/components/ui/animations";
 import { AuthGateModal } from "@/components/auth-gate-modal";
@@ -667,7 +668,7 @@ export function VerificationResult({
 
               <Button
                 size="lg"
-                className="text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+                className="group text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-shadow"
                 onClick={handlePay}
                 disabled={isPaymentLoading}
               >
@@ -676,7 +677,12 @@ export function VerificationResult({
                 ) : (
                   <ShieldCheck className="mr-2 h-5 w-5" />
                 )}
-                Получить полный отчёт — 990 руб.
+                <span>Получить полный отчёт — 990 руб.</span>
+                {!isPaymentLoading && (
+                  <div className="ml-1 -rotate-45 transition-all duration-200 group-hover:rotate-0">
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
+                )}
               </Button>
               <p className="text-xs text-muted-foreground mt-3">
                 Разовый платёж &bull; Банковская карта &bull; Моментальный доступ

@@ -32,7 +32,7 @@ export default async function USDashboardLayout({
 
           <div className="flex items-center gap-3">
             <Link href="/us/dashboard/verify/new">
-              <button className="cursor-pointer flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-all">
+              <button className="cursor-pointer flex items-center gap-2 bg-[#33C791] text-[#161616] font-semibold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition-all">
                 <ShieldCheck className="w-4 h-4" />
                 <span className="hidden sm:inline">Check Estimate</span>
               </button>

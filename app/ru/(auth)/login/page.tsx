@@ -134,7 +134,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {resetLoading && <Loader2 className="w-5 h-5 animate-spin" />}
                     Отправить ссылку для сброса
@@ -206,7 +206,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-full hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="cursor-pointer w-full bg-[#0D8DFF] text-[#161616] font-semibold py-4 rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                 Войти
@@ -227,7 +227,7 @@ export default function LoginPage() {
 
               <button
                 onClick={handleGoogleLogin}
-                className="cursor-pointer w-full bg-white border-2 border-[#161616]/10 text-[#161616] font-semibold py-4 rounded-full hover:bg-[#FAF4EC] transition-all flex items-center justify-center gap-3"
+                className="cursor-pointer w-full bg-white border-2 border-[#161616]/10 text-[#161616] font-semibold py-4 rounded-xl hover:bg-[#FAF4EC] transition-all flex items-center justify-center gap-3"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

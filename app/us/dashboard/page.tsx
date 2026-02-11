@@ -152,10 +152,12 @@ export default function USDashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-[#161616]">My Estimate Checks</h2>
           <Link href="/us/dashboard/verify/new">
-            <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-full hover:opacity-90 transition-all">
+            <button className="cursor-pointer group flex items-center gap-2 bg-[#0D8DFF] text-[#161616] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-all">
               <ShieldCheck className="w-5 h-5" />
-              New Check
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <span>New Check</span>
+              <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                <ArrowRight className="w-5 h-5" />
+              </div>
             </button>
           </Link>
         </div>
@@ -171,8 +173,11 @@ export default function USDashboardPage() {
               Get instant AI-powered analysis.
             </p>
             <Link href="/us/dashboard/verify/new">
-              <button className="cursor-pointer bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
-                Check Your First Estimate
+              <button className="cursor-pointer group bg-[#33C791] text-[#161616] font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition-all flex items-center gap-2">
+                <span>Check Your First Estimate</span>
+                <div className="-rotate-45 transition-all duration-200 group-hover:rotate-0">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
               </button>
             </Link>
           </div>
@@ -253,7 +258,7 @@ export default function USDashboardPage() {
           <p className="text-white/60 mb-6">
             Upgrade to Pro for unlimited estimate checks and detailed breakdowns
           </p>
-          <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-full hover:opacity-90 transition-all">
+          <button className="cursor-pointer bg-[#0D8DFF] text-[#161616] font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition-all">
             Upgrade to Pro - $29/month
           </button>
         </div>
