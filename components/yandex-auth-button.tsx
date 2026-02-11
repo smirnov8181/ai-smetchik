@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 
 /**
  * Yandex OAuth button using the official Yandex ID SDK.
@@ -126,11 +126,18 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
     return (
       <>
         {/* Full-screen overlay so the user doesn't see the login form */}
-        <div className="fixed inset-0 z-50 bg-[#FAF4EC] flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#161616]/40 mx-auto mb-4" />
-            <p className="text-[#161616]/50">Входим через Яндекс...</p>
+        <div
+          className="fixed z-50 bg-[#FAF4EC] flex flex-col items-center justify-center"
+          style={{ top: 0, left: 0, width: "100vw", height: "100vh" }}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-[#161616] rounded-xl flex items-center justify-center">
+              <FileText className="h-6 w-6 text-[#FAF4EC]" />
+            </div>
+            <span className="font-bold text-2xl text-[#161616]">AI Сметчик</span>
           </div>
+          <Loader2 className="w-8 h-8 animate-spin text-[#161616]/30 mb-4" />
+          <p className="text-[#161616]/50 text-sm">Входим через Яндекс...</p>
         </div>
       </>
     );

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/animations";
 
 const stats: { value: number; suffix: string; label: string }[] = [
-  { value: 30, suffix: " сек", label: "на проверку сметы" },
+  { value: 60, suffix: " сек", label: "на проверку сметы" },
   { value: 120, suffix: "K+", label: "средняя переплата (руб.)" },
   { value: 24, suffix: "/7", label: "обновляемая база цен" },
   { value: 100, suffix: "+", label: "позиций в базе цен" },
@@ -145,7 +145,7 @@ export function LandingContent() {
                 <div className="flex flex-wrap items-center gap-6 text-sm text-[#161616]/50">
                   <span className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#33C791]" />
-                    Результат за 30 секунд
+                     Результат за 60 секунд
                   </span>
                   <span className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-[#0D8DFF]" />
@@ -207,16 +207,16 @@ export function LandingContent() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 bg-[#161616] text-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-8" staggerDelay={0.15}>
+      <section className="py-12">
+        <div className="max-w-5xl mx-auto px-6">
+          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4" staggerDelay={0.15}>
             {stats.map((stat, i) => (
               <StaggerItem key={i}>
-                <div className="text-center">
-                  <div className="text-4xl md:text-5xl font-bold mb-2">
+                <div className="text-center bg-white rounded-2xl p-6 border border-[#161616]/5 shadow-sm">
+                  <div className="text-3xl md:text-4xl font-bold text-[#161616] mb-1">
                     <CountUp value={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div className="text-white/50 text-sm">{stat.label}</div>
+                  <div className="text-[#161616]/40 text-sm">{stat.label}</div>
                 </div>
               </StaggerItem>
             ))}
@@ -377,7 +377,7 @@ export function LandingContent() {
                 <h3 className="text-2xl font-bold mb-2">Создание сметы</h3>
                 <div className="text-4xl font-bold mb-1">490 <span className="text-lg font-normal text-[#161616]/50">руб.</span></div>
                 <ul className="space-y-3 my-8">
-                  {["30% разделов — бесплатно", "Полная смета — 490 руб.", "AI анализ за 30 секунд", "Экспорт в CSV и шаринг"].map((f, i) => (
+                  {["30% разделов — бесплатно", "Полная смета — 490 руб.", "AI анализ за 60 секунд", "Экспорт в CSV и шаринг"].map((f, i) => (
                     <li key={i} className="flex items-center gap-3 text-[#161616]/70">
                       <CheckCircle2 className="w-5 h-5 text-[#33C791] shrink-0" />
                       {f}
@@ -439,7 +439,7 @@ export function LandingContent() {
           </FadeIn>
           <FadeIn direction="up" delay={0.15}>
             <p className="text-xl text-white/50 mb-10 max-w-2xl mx-auto">
-              Создайте смету или проверьте смету подрядчика — бесплатно и за 30 секунд.
+              Создайте смету или проверьте смету подрядчика — бесплатно и за 60 секунд.
             </p>
           </FadeIn>
           <FadeIn direction="up" delay={0.3}>
