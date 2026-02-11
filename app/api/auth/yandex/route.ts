@@ -75,28 +75,41 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 3: Generate magic link to get email_otp
-    // The Supabase admin API returns email_otp at the top level (not in TS types)
-    const { data: linkData, error: linkError } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-      });
+    // Step 3: Generate magic link via REST API to get email_otp
+    // The JS SDK strips email_otp from the response, so we call the REST API directly
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-    if (linkError || !linkData) {
-      console.error("Generate link failed:", linkError);
+    const linkRes = await fetch(
+      `${supabaseUrl}/auth/v1/admin/generate_link`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ type: "magiclink", email }),
+      }
+    );
+
+    if (!linkRes.ok) {
+      const linkErr = await linkRes.text();
+      console.error("Generate link failed:", linkErr);
       return NextResponse.json(
         { error: "Failed to generate login link" },
         { status: 500 }
       );
     }
 
-    // email_otp is on the raw API response but not in TS types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const emailOtp: string | undefined = (linkData as any).email_otp;
+    const linkData = await linkRes.json();
+    const emailOtp: string | undefined = linkData.email_otp;
 
     if (!emailOtp) {
-      console.error("No email_otp in generateLink response");
+      console.error(
+        "No email_otp in generateLink response. Keys:",
+        Object.keys(linkData)
+      );
       return NextResponse.json(
         { error: "Failed to generate OTP" },
         { status: 500 }
