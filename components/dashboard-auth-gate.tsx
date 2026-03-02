@@ -1,15 +1,27 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useAnonAuth } from "@/hooks/use-anon-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { migrateAnonData } from "@/lib/utils/anon-migrate";
 
 /**
  * Client wrapper that ensures a user session exists before rendering children.
  * If no session — signs in anonymously (with retries).
  * Shows loading skeleton while initializing.
+ * Also triggers anon data migration if the user just logged in.
  */
 export function DashboardAuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading, error } = useAnonAuth();
+  const migratedRef = useRef(false);
+
+  // After login/register, migrate anonymous data if available
+  useEffect(() => {
+    if (user && !user.is_anonymous && !migratedRef.current) {
+      migratedRef.current = true;
+      migrateAnonData();
+    }
+  }, [user]);
 
   if (loading) {
     return (

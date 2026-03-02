@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { FileText, Loader2, Mail, Lock } from "lucide-react";
 import { YandexAuthButton } from "@/components/yandex-auth-button";
+import { saveAnonUserId } from "@/lib/utils/anon-migrate";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -22,6 +23,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Save anon user id before login replaces the session
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser?.is_anonymous) {
+      saveAnonUserId(currentUser.id);
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -61,6 +68,12 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    // Save anon user id before OAuth redirect replaces the session
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser?.is_anonymous) {
+      saveAnonUserId(currentUser.id);
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

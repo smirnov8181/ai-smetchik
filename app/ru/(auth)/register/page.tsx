@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { FileText, Loader2, Mail, Lock, CheckCircle2, ArrowRight } from "lucide-react";
 import { YandexAuthButton } from "@/components/yandex-auth-button";
+import { saveAnonUserId } from "@/lib/utils/anon-migrate";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -27,6 +28,33 @@ export default function RegisterPage() {
       return;
     }
 
+    // Check if user is currently anonymous — convert in place to preserve data
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    const isAnonymous = currentUser?.is_anonymous === true;
+
+    if (isAnonymous) {
+      // Convert anonymous user → same user_id, all estimates preserved
+      const { error: updateError } = await supabase.auth.updateUser({
+        email,
+        password,
+      });
+
+      if (updateError) {
+        if (updateError.message?.includes("already been registered")) {
+          setError("Этот email уже зарегистрирован. Войдите через страницу входа.");
+        } else {
+          setError(updateError.message);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Successfully converted — redirect to dashboard
+      window.location.href = "/ru/dashboard";
+      return;
+    }
+
+    // Not anonymous — normal signUp flow
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -58,6 +86,12 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignUp = async () => {
+    // Save anon user id before OAuth redirect replaces the session
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser?.is_anonymous) {
+      saveAnonUserId(currentUser.id);
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

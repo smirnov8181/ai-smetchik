@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2, FileText } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { saveAnonUserId } from "@/lib/utils/anon-migrate";
 
 /**
  * Yandex OAuth button using the official Yandex ID SDK.
@@ -77,6 +79,17 @@ export function YandexAuthButton({ height = 44 }: YandexAuthButtonProps) {
           }
 
           setLoading(true);
+
+          // Save anon user id before Yandex auth replaces the session
+          try {
+            const supabase = createClient();
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            if (currentUser?.is_anonymous) {
+              saveAnonUserId(currentUser.id);
+            }
+          } catch {
+            // Ignore — best effort
+          }
 
           // Send token to our API
           const res = await fetch("/api/auth/yandex", {
