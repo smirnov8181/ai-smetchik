@@ -49,7 +49,7 @@ export async function normalizeInput(params: {
       { role: "system", content: NORMALIZER_SYSTEM_PROMPT },
       { role: "user", content: userParts },
     ],
-    temperature: 0.3,
+    temperature: 0,
     max_tokens: 2000,
     response_format: { type: "json_object" },
   });
